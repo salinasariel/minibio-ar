@@ -1,0 +1,99 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  password_hash String
+  username      String   @unique
+  display_name  String?
+  avatar_url    String?
+  created_at    DateTime @default(now())
+  pages         Page[]
+
+  @@map("users") // Mapea este modelo a la tabla 'users'
+}
+
+model Page {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  title      String?
+  bio        String?
+  theme      Json?
+  created_at DateTime @default(now())
+  links      Link[]
+  orders     Order[]
+  menus      Menu[]
+
+  @@map("pages")
+}
+
+model Link {
+  id         Int      @id @default(autoincrement())
+  page_id    Int
+  page       Page     @relation(fields: [page_id], references: [id], onDelete: Cascade)
+  title      String
+  url        String
+  position   Int      @default(0)
+  clicks     Int      @default(0)
+  created_at DateTime @default(now())
+
+  @@map("links")
+}
+
+model Order {
+  id            Int       @id @default(autoincrement())
+  page_id       Int?
+  page          Page?     @relation(fields: [page_id], references: [id], onDelete: SetNull)
+  customer_name String?
+  phone         String?
+  address       String?
+  items         Json? // [{itemId, name, qty, price}]
+  total         Decimal?  @db.Decimal(10, 2)
+  status        String    @default("pending")
+  created_at    DateTime  @default(now())
+
+  @@map("orders")
+}
+
+model Menu {
+  id                  Int       @id @default(autoincrement())
+  page_id             Int?
+  page                Page?     @relation(fields: [page_id], references: [id], onDelete: SetNull)
+  product_name        String?
+  product_description String?
+  image               String?
+  items               Json? // [{itemId, name, qty, price}]
+  price               Decimal?  @db.Decimal(10, 2)
+  status              String    @default("active")
+  created_at          DateTime  @default(now())
+
+  @@map("menus")
+}
+
+model MinibioParam {
+  id           Int       @id @default(autoincrement())
+  param_code   String?
+  param_code_2 String?
+  varchar_1    String?
+  varchar_2    String?
+  varchar_3    String?
+  json_1       Json?
+  number_1     Decimal?  @db.Decimal(15, 2)
+  number_2     Decimal?  @db.Decimal(15, 2)
+  number_3     Decimal?  @db.Decimal(15, 2)
+  date_1       DateTime? @db.Date
+  date_2       DateTime? @db.Date
+  created_at   DateTime  @default(now())
+
+  @@map("minibio_param")
+}
