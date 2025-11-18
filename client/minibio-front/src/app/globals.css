@@ -1,26 +1,340 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================
+   iOS 18/19 Design System Variables
+   ============================================ */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  /* Colores base */
+  --ios-bg-primary: #F2F2F7;
+  --ios-bg-secondary: #FFFFFF;
+  --ios-bg-tertiary: #F9F9F9;
+  
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  
+  /* Colores de acento (iOS style) */
+  --ios-blue: #007AFF;
+  --ios-blue-hover: #0051D5;
+  --ios-green: #34C759;
+  --ios-red: #FF3B30;
+  --ios-orange: #FF9500;
+  --ios-purple: #AF52DE;
+  --ios-pink: #FF2D55;
+  --ios-teal: #5AC8FA;
+  
+  /* Texto */
+  --ios-text-primary: #000000;
+  --ios-text-secondary: #8E8E93;
+  --ios-text-tertiary: #C7C7CC;
+  
+  /* Sombras iOS */
+  --ios-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --ios-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --ios-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --ios-shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.15);
+  
+  /* Blur */
+  --blur-light: blur(20px);
+  --blur-medium: blur(40px);
+  --blur-heavy: blur(60px);
+  
+  /* Radios iOS */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+  
+  /* Transiciones */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s ease;
+  --transition-slow: 0.35s ease;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --ios-bg-primary: #000000;
+    --ios-bg-secondary: #1C1C1E;
+    --ios-bg-tertiary: #2C2C2E;
+    
+    --glass-bg: rgba(28, 28, 30, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    
+    --ios-text-primary: #FFFFFF;
+    --ios-text-secondary: #8E8E93;
+    --ios-text-tertiary: #48484A;
   }
 }
 
+/* ============================================
+   Reset y Base Styles
+   ============================================ */
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: var(--ios-bg-primary);
+  color: var(--ios-text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+
+  font-size: 17px;
+  line-height: 1.47;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   Utility Classes iOS Style
+   ============================================ */
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-medium);
+  -webkit-backdrop-filter: var(--blur-medium);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: var(--blur-heavy);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.card-ios {
+  background: var(--ios-bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--ios-shadow-md);
+  transition: all var(--transition-base);
+}
+
+.card-ios:hover {
+  box-shadow: var(--ios-shadow-lg);
+  transform: translateY(-2px);
+}
+
+.button-ios {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: var(--radius-xl);
+  font-weight: 600;
+  font-size: 17px;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.button-ios:active {
+  transform: scale(0.96);
+}
+
+.button-primary {
+  background: var(--ios-blue);
+  color: white;
+}
+
+.button-primary:hover {
+  background: var(--ios-blue-hover);
+  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+}
+
+.button-secondary {
+  background: var(--ios-bg-tertiary);
+  color: var(--ios-text-primary);
+}
+
+.button-secondary:hover {
+  background: #E5E5EA;
+}
+
+.input-ios {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--ios-bg-tertiary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 17px;
+  color: var(--ios-text-primary);
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.input-ios:focus {
+  background: var(--ios-bg-secondary);
+  border-color: var(--ios-blue);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.input-ios::placeholder {
+  color: var(--ios-text-secondary);
+}
+
+/* ============================================
+   Animations iOS Style
+   ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    #f8f8f8 50%,
+    #f0f0f0 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ============================================
+   iOS Haptic Feedback (visual)
+   ============================================ */
+
+.haptic-light:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+.haptic-medium:active {
+  transform: scale(0.96);
+  transition: transform 0.1s ease;
+}
+
+.haptic-heavy:active {
+  transform: scale(0.94);
+  transition: transform 0.1s ease;
+}
+
+/* ============================================
+   Scrollbar iOS Style
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   Selection
+   ============================================ */
+
+::selection {
+  background: var(--ios-blue);
+  color: white;
+}
+
+::-moz-selection {
+  background: var(--ios-blue);
+  color: white;
+}
+
+/* ============================================
+   Focus States
+   ============================================ */
+
+*:focus-visible {
+  outline: 2px solid var(--ios-blue);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+@media (max-width: 768px) {
+  body {
+    font-size: 16px;
+  }
+  
+  .button-ios {
+    padding: 10px 20px;
+    font-size: 16px;
+  }
+  
+  .input-ios {
+    padding: 12px 14px;
+    font-size: 16px;
+  }
 }
