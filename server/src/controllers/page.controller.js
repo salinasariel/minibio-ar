@@ -2,8 +2,10 @@ const prisma = require('../models/db');
 
 exports.getAllPages = async (req, res) => {
   try {
+      const userId = req.user.userId; 
+
     const pages = await prisma.page.findMany({
-      include: { links: true, menus: true }, 
+      include: { links: true, menus: true, user: userId }, 
     });
     res.status(200).json(pages);
   } catch (error) {
@@ -27,5 +29,25 @@ exports.createPage = async (req, res) => {
     res.status(201).json(newPage);
   } catch (error) {
     res.status(500).json({ error: 'Error al crear la página', details: error.message });
+  }
+};
+
+exports.getMyPages = async (req, res) => {
+  // req.user.userId viene del middleware verifyToken
+  const userId = req.user.userId;
+
+  try {
+    const pages = await prisma.page.findMany({
+      where: {
+        user_id: userId,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+    // Devuelve un array (puede estar vacío, pero no es un error)
+    res.status(200).json(pages);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener las páginas' });
   }
 };
