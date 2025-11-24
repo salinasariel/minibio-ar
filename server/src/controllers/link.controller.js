@@ -48,12 +48,14 @@ exports.getLinksByPage = async (req, res) => {
 
   try {
     // Verificar que la página pertenece al usuario
-    const page = await prisma.page.findUnique({
+    const page = await prisma.page.findFirst({
       where: { id: parseInt(pageId) },
     });
-
+    console.log(page);
+    console.log(userId);
+    console.log(page.user_id);
     if (!page || page.user_id !== userId) {
-      return res.status(403).json({ error: 'No autorizado para ver esta página' });
+      return res.status(403).json({ error: 'No se encontro la página' });
     }
 
     const links = await prisma.link.findMany({

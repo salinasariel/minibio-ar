@@ -14,4 +14,9 @@ router.get('/:username', publicController.getPublicProfile);
 // Ejemplo: GET /api/public/page/123
 router.get('/page/:pageId', publicController.getPublicPage);
 
+
+router.get('/paramPublic/:paramCode/:language', publicController.getPublicParams);
+
+
+
 module.exports = router;

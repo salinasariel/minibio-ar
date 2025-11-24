@@ -43,9 +43,9 @@ exports.getPublicProfile = async (req, res) => {
       links: page.links,
     });
   } catch (error) {
-    res.status(500).json({ 
-      error: 'Error al obtener perfil público', 
-      details: error.message 
+    res.status(500).json({
+      error: 'Error al obtener perfil público',
+      details: error.message
     });
   }
 };
@@ -89,9 +89,56 @@ exports.getPublicPage = async (req, res) => {
       links: page.links,
     });
   } catch (error) {
-    res.status(500).json({ 
-      error: 'Error al obtener página pública', 
-      details: error.message 
+    res.status(500).json({
+      error: 'Error al obtener página pública',
+      details: error.message
+    });
+  }
+};
+
+
+// ========================================
+// Parametros publicos, number_3 = 0
+// ========================================
+
+exports.getPublicParams = async (req, res) => {
+  const { paramCode, language } = req.params;
+
+
+  try {
+    const params = await prisma.MinibioParam.findFirst({
+      where: { param_code: paramCode, param_code_2: language, number_3: 0 }
+
+    });
+
+    if (!paramCode || !language) {
+      return res.status(400).json({ error: "Faltan parámetros" });
+    }
+
+
+    if (!params) {
+      return res.status(404).json({ error: 'Parametro no encontrado' });
+    }
+
+    res.status(200).json({
+      param: {
+        param_code: params.param_code,
+        param_code_2: params.param_code_2,
+        varchar_1: params.varchar_1,
+        varchar_2: params.varchar_2,
+        varchar_3: params.varchar_3,
+        json_1: params.json_1,
+        number_1: params.number_1,
+        number_2: params.number_2,
+        number_3: params.number_3,
+        date_1: params.date_1,
+        date_2: params.date_2
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Error al obtener el parametro',
+      details: error.message
     });
   }
 };

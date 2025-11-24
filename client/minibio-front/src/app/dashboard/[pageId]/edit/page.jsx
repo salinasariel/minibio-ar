@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { useRouter } from 'next/navigation';
@@ -8,8 +8,8 @@ import Button from '@/components/Button';
 import Card from '@/components/Card';
 import Input from '@/components/Input';
 
-export default function EditPage({ params }) {
-  const { pageId } = params;
+export default function EditPage(props) {
+  const { pageId } = use(props.params);
   const { user, token, loading } = useAuth();
   const router = useRouter();
 
@@ -116,12 +116,12 @@ export default function EditPage({ params }) {
         },
       });
 
-      setLinks(links.map(link => 
+      setLinks(links.map(link =>
         link.id === linkId ? updatedLink : link
       ));
 
       setEditingId(null);
-      showSuccess('✏️ Link actualizado');
+      showSuccess('Guardado');
     } catch (err) {
       setError(err.message);
     }
@@ -164,7 +164,7 @@ export default function EditPage({ params }) {
         method: 'PATCH',
         body: { links: reorderedLinks },
       });
-      showSuccess('↕️ Links reordenados');
+      showSuccess('Guardado');
     } catch (err) {
       setError('Error al reordenar');
       fetchLinks();
@@ -240,9 +240,9 @@ export default function EditPage({ params }) {
         )}
 
         {/* Formulario Agregar Link */}
-        <Card variant="glass" padding="large" className="mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Añadir Nuevo Link</h2>
-          <div className="space-y-4">
+        <Card variant="glass" padding="large" className="mb-8 p-5">
+          <h2 className=" text-xl font-bold text-gray-900 mb-4">Añadir Nuevo Link</h2>
+          <div className="  text-gray-500 space-y-4">
             <Input
               value={newLinkTitle}
               onChange={(e) => setNewLinkTitle(e.target.value)}
@@ -257,7 +257,7 @@ export default function EditPage({ params }) {
               label="URL"
             />
             <Button onClick={handleAddLink} variant="primary" size="large" fullWidth>
-              ➕ Añadir Link
+              Añadir
             </Button>
           </div>
         </Card>
@@ -269,7 +269,7 @@ export default function EditPage({ params }) {
           </h2>
           {links.length > 0 && (
             <p className="text-sm text-gray-500">
-              Arrastra para reordenar ↕️
+              Arrastra para ordenar a gusto.
             </p>
           )}
         </div>
@@ -307,7 +307,7 @@ export default function EditPage({ params }) {
                   className="p-5 cursor-move"
                 >
                   {editingId === link.id ? (
-                    <div className="space-y-3">
+                    <div className="space-y-3  text-gray-500">
                       <Input
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
@@ -321,10 +321,10 @@ export default function EditPage({ params }) {
                       />
                       <div className="flex gap-2">
                         <Button onClick={() => handleSaveEdit(link.id)} variant="primary" size="small">
-                          ✓ Guardar
+                          Guardar
                         </Button>
                         <Button onClick={handleCancelEdit} variant="secondary" size="small">
-                          ✕ Cancelar
+                          Cancelar
                         </Button>
                       </div>
                     </div>
@@ -339,7 +339,7 @@ export default function EditPage({ params }) {
                         <h3 className="text-lg font-semibold text-gray-900 truncate">{link.title}</h3>
                         <p className="text-sm text-gray-500 truncate">{link.url}</p>
                         <p className="text-xs text-gray-400 mt-1">
-                          👁️ {link.clicks} clicks
+                          {link.clicks} clicks
                         </p>
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
