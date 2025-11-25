@@ -70,7 +70,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <div className="space-y-5">
+          <div className="text-gray-900 space-y-5">
             <Input
               type="email"
               value={email}

@@ -1,4 +1,6 @@
 "use client";
+import { apiFetch } from '@/lib/api';
+import { Sparkles } from 'lucide-react';
 import logo from '../../../public/minibio-logo.png';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -13,7 +15,6 @@ export default function RegisterPage() {
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    console.log(logo);
 
     const { register } = useAuth();
 
@@ -22,13 +23,20 @@ export default function RegisterPage() {
         setError('');
         setLoading(true);
 
-        const success = await register(email, password, username);
+        try {
+            await apiFetch('/auth/register', null, {
+                method: 'POST',
+                body: { email, password, username },
+            });
 
-        if (!success) {
-            setError('Email o contraseña incorrectos');
+            // Redirect to login after successful registration
+            window.location.href = '/login';
+        } catch (err) {
+            console.error('Error registering:', err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
         }
-
-        setLoading(false);
     };
 
     return (
@@ -44,13 +52,8 @@ export default function RegisterPage() {
                 {/* Logo/Brand */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center mb-4">
-                        <img
-                            src={logo}
-                            alt="MiniBio Logo"
-                            className="w-20 h-20 object-contain"
-                            width={80}
-                            height={80}
-                        />
+                        <Sparkles className="text-blue-400 w-10 h-10" />
+
                     </div>
 
                     <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -76,7 +79,7 @@ export default function RegisterPage() {
                         </div>
                     )}
 
-                    <div className="space-y-5">
+                    <div className="text-gray-900 space-y-5">
                         <Input
                             type="text"
                             value={username}
@@ -125,18 +128,18 @@ export default function RegisterPage() {
                             fullWidth
                             loading={loading}
                         >
-                            Entrar
+                            Registrarse
                         </Button>
                     </div>
 
                     <div className="mt-6 pt-6 border-t border-gray-200">
                         <p className="text-center text-sm text-gray-600">
-                            ¿No tienes cuenta?{' '}
+                            ¿Ya tienes cuenta?{' '}
                             <Link
-                                href="/register"
+                                href="/login"
                                 className="font-semibold text-blue-600 hover:text-blue-700 hover:underline"
                             >
-                                Regístrate gratis
+                                Inicia sesión
                             </Link>
                         </p>
                     </div>

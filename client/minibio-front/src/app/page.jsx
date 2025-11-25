@@ -22,7 +22,8 @@ export default function MiniBioLanding() {
 
   const benefits = [
     'Listo en poco tiempo',
-    'Diseño profesional y moderno',
+    'Personaliza tu diseño',
+    'Catalogo de productos',
     'Cartas para restaurantes',
     'Reservas para tu negocio',
     'Actualizá tu contenido cuando quieras',
@@ -54,7 +55,7 @@ export default function MiniBioLanding() {
               </span>
             </div>
             <a
-              href="https://minibio.ar"
+              href="/login"
               className={`px-6 py-2 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-105 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
             >
               Iniciar Sesión
@@ -75,7 +76,7 @@ export default function MiniBioLanding() {
                 La plataforma perfecta para emprendedores que quieren destacar online. Creá tu perfil profesional y compartí todo lo que haces.
               </p>
               <a
-                href="/login"
+                href="/register"
                 className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full text-lg font-semibold text-gray-900 hover:scale-105 transform transition-all duration-300 shadow-2xl hover:shadow-pink-500/50"
               >
                 Comenzar Gratis
@@ -144,7 +145,7 @@ export default function MiniBioLanding() {
               La hacemos facil, para que te preocupes de lo importante.
             </p>
             <a
-              href="https://minibio.ar"
+              href="/register"
               className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full text-xl font-semibold text-gray-900 hover:scale-105 transform transition-all duration-300 shadow-2xl hover:shadow-pink-500/50"
             >
               Comenzar Ahora
