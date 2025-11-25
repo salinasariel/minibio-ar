@@ -68,7 +68,6 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Cargando...</p>
         </div>
       </div>
     );
@@ -153,12 +152,12 @@ export default function DashboardPage() {
                   <Button onClick={handleCreatePage} variant="primary" fullWidth>
                     Crear Página
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => {
                       setShowCreateForm(false);
                       setNewPageTitle('');
                       setError('');
-                    }} 
+                    }}
                     variant="secondary"
                   >
                     Cancelar
@@ -196,8 +195,8 @@ export default function DashboardPage() {
               <p className="text-gray-600 mb-6">
                 Crea tu primera página para empezar a compartir tus links
               </p>
-              <Button 
-                onClick={() => setShowCreateForm(true)} 
+              <Button
+                onClick={() => setShowCreateForm(true)}
                 variant="primary"
                 icon={
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,9 +211,9 @@ export default function DashboardPage() {
         ) : (
           <div className="grid gap-4">
             {pages.map((page, index) => (
-              <Card 
-                key={page.id} 
-                variant="glass" 
+              <Card
+                key={page.id}
+                variant="glass"
                 padding="none"
                 hover
                 className="overflow-hidden animate-slide-up"

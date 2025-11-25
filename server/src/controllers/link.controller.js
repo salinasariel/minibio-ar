@@ -44,7 +44,7 @@ exports.createLink = async (req, res) => {
 // ========================================
 exports.getLinksByPage = async (req, res) => {
   const { pageId } = req.params;
-  const userId = req.user.userId;
+
 
   try {
     // Verificar que la página pertenece al usuario
@@ -52,9 +52,9 @@ exports.getLinksByPage = async (req, res) => {
       where: { id: parseInt(pageId) },
     });
     console.log(page);
-    console.log(userId);
+
     console.log(page.user_id);
-    if (!page || page.user_id !== userId) {
+    if (!page) {
       return res.status(403).json({ error: 'No se encontro la página' });
     }
 
@@ -63,7 +63,10 @@ exports.getLinksByPage = async (req, res) => {
       orderBy: { position: 'asc' },
     });
 
-    res.status(200).json(links);
+    res.status(200).json({
+      links: links,
+      page: page
+    });
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener los links', details: error.message });
   }
@@ -178,5 +181,36 @@ exports.trackClick = async (req, res) => {
     res.status(200).json({ message: 'Click registrado' });
   } catch (error) {
     res.status(500).json({ error: 'Error al registrar click' });
+  }
+};
+
+
+exports.getLinksByPageName = async (req, res) => {
+  const { pageName } = req.params;
+
+
+  try {
+    // Verificar que la página pertenece al usuario
+    const page = await prisma.page.findFirst({
+      where: { title: pageName },
+    });
+    console.log(page);
+
+    console.log(page.user_id);
+    if (!page) {
+      return res.status(403).json({ error: 'No se encontro la página' });
+    }
+
+    const links = await prisma.link.findMany({
+      where: { page_id: page.id },
+      orderBy: { position: 'asc' },
+    });
+
+    res.status(200).json({
+      links: links,
+      page: page
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener los links', details: error.message });
   }
 };

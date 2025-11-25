@@ -35,7 +35,7 @@ export default function EditPage(props) {
     setIsLoading(true);
     try {
       const data = await apiFetch(`/links/page/${pageId}`, token);
-      setLinks(data);
+      setLinks(data.links);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -73,7 +73,7 @@ export default function EditPage(props) {
       setLinks([...links, newLink]);
       setNewLinkTitle('');
       setNewLinkUrl('');
-      showSuccess('✅ Link agregado');
+      showSuccess('Link agregado');
     } catch (err) {
       setError(err.message);
     }
@@ -178,7 +178,6 @@ export default function EditPage(props) {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Cargando...</p>
         </div>
       </div>
     );
@@ -246,7 +245,7 @@ export default function EditPage(props) {
             <Input
               value={newLinkTitle}
               onChange={(e) => setNewLinkTitle(e.target.value)}
-              placeholder="Ej: Mi Instagram"
+              placeholder="Instagram"
               label="Título"
             />
             <Input
@@ -283,10 +282,10 @@ export default function EditPage(props) {
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Aún no tienes links
+                Nada por acá.
               </h3>
               <p className="text-gray-600">
-                ¡Agrega tu primer link arriba!
+                ¡Agregá tu primer link arriba!
               </p>
             </div>
           </Card>

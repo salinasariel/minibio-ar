@@ -11,7 +11,7 @@ const verifyToken = require('../middleware/auth');
 router.post('/', verifyToken, linkController.createLink);
 
 // Obtener links de una página específica
-router.get('/page/:pageId', verifyToken, linkController.getLinksByPage);
+router.get('/page/:pageId', linkController.getLinksByPage);
 
 // Actualizar un link
 router.put('/:id', verifyToken, linkController.updateLink);
@@ -25,6 +25,8 @@ router.patch('/reorder', verifyToken, linkController.reorderLinks);
 // ========================================
 // RUTAS PÚBLICAS (sin autenticación)
 // ========================================
+
+router.get('/pageName/:pageName', linkController.getLinksByPageName);
 
 // Tracking de clicks
 router.post('/:id/click', linkController.trackClick);

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Card from '@/components/Card';
+import { Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -43,13 +44,7 @@ export default function LoginPage() {
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
-            <img
-              src={logo}
-              alt="MiniBio Logo"
-              className="w-20 h-20 object-contain"
-              width={80}
-              height={80}
-            />
+            <Sparkles className="text-blue-400 w-10 h-10" />
           </div>
 
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
