@@ -1,5 +1,4 @@
 "use client";
-import logo from '../../../public/minibio-logo.png';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
@@ -13,7 +12,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  console.log(logo);
 
   const { login } = useAuth();
 

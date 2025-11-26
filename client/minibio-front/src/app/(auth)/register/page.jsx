@@ -1,7 +1,6 @@
 "use client";
 import { apiFetch } from '@/lib/api';
 import { Sparkles } from 'lucide-react';
-import logo from '../../../public/minibio-logo.png';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
