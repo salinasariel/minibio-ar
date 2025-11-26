@@ -68,7 +68,7 @@ export default function PublicProfilePage() {
           <h1 className="text-6xl font-bold mb-4">404</h1>
           <p className="text-xl mb-6">Usuario no encontrado</p>
           <a
-            href="/"
+            href="https://minibio.ar"
             className="px-6 py-3 bg-white text-gray-900 rounded-full font-semibold hover:bg-gray-100 transition"
           >
             Volver al inicio
@@ -149,7 +149,7 @@ export default function PublicProfilePage() {
         {/* Footer */}
         <div className="text-center">
           <a
-            href="/"
+            href="https://minibio.ar"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-md border-2 border-white/30 rounded-full text-white font-semibold hover:bg-white/30 transition-all hover:scale-105"
