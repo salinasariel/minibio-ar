@@ -14,6 +14,8 @@ export default function EditPage(props) {
   const router = useRouter();
 
   const [links, setLinks] = useState([]);
+  const [page, setPage] = useState([]);
+
   const [newLinkTitle, setNewLinkTitle] = useState('');
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [error, setError] = useState('');
@@ -36,6 +38,7 @@ export default function EditPage(props) {
     try {
       const data = await apiFetch(`/links/page/${pageId}`, token);
       setLinks(data.links);
+      setPage(data.page);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -128,9 +131,9 @@ export default function EditPage(props) {
   };
 
   const copyPublicLink = () => {
-    const publicUrl = `${window.location.origin}/${user.username}`;
+    const publicUrl = `${window.location.origin}/${page?.title}`;
     navigator.clipboard.writeText(publicUrl);
-    showSuccess('📋 Link copiado!');
+    showSuccess('¡Link copiado!');
   };
 
   // Drag & Drop handlers
@@ -215,7 +218,7 @@ export default function EditPage(props) {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Editor de Links</h1>
           <p className="text-gray-600">
-            minibio.ar/<span className="font-semibold text-blue-600">{user?.username}</span>
+            minibio.ar/<span className="font-semibold text-blue-600">{page?.title}</span>
           </p>
         </div>
 

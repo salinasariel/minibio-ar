@@ -21,7 +21,7 @@ export default function MiniBioLanding() {
   ];
 
   const benefits = [
-    'Listo en poco tiempo',
+    'Listo rápido',
     'Personaliza tu diseño',
     'Catalogo de productos',
     'Cartas para restaurantes',
@@ -51,7 +51,7 @@ export default function MiniBioLanding() {
             <div className={`flex items-center gap-2 text-2xl font-bold transition-all duration-700 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
               <Sparkles className="text-yellow-400" />
               <span className="bg-gradient-to-r from-yellow-400 to-pink-400 bg-clip-text text-transparent">
-                MiniBio
+                MiniBio.ar
               </span>
             </div>
             <a
@@ -161,7 +161,7 @@ export default function MiniBioLanding() {
           <div className="flex items-center justify-center gap-2 text-2xl font-bold mb-4">
             <Sparkles className="text-yellow-400" />
             <span className="bg-gradient-to-r from-yellow-400 to-pink-400 bg-clip-text text-transparent">
-              MiniBio
+              MiniBio.ar
             </span>
           </div>
           <p className="text-purple-200">
