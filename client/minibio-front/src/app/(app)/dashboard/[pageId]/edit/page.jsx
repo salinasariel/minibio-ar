@@ -91,7 +91,7 @@ export default function EditPage(props) {
       });
 
       setLinks(links.filter(link => link.id !== linkId));
-      showSuccess('🗑️ Link eliminado');
+      showSuccess('Link eliminado');
     } catch (err) {
       setError(err.message);
     }
@@ -131,7 +131,7 @@ export default function EditPage(props) {
   };
 
   const copyPublicLink = () => {
-    const publicUrl = `${window.location.origin}/${page?.title}`;
+    const publicUrl = `${page?.title}.minibio.ar`;
     navigator.clipboard.writeText(publicUrl);
     showSuccess('¡Link copiado!');
   };
@@ -218,7 +218,7 @@ export default function EditPage(props) {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Editor de Links</h1>
           <p className="text-gray-600">
-            minibio.ar/<span className="font-semibold text-blue-600">{page?.title}</span>
+            <span className="font-semibold text-blue-600">{page?.title}</span>.minibio.ar
           </p>
         </div>
 
