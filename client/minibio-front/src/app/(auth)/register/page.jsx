@@ -13,13 +13,48 @@ export default function RegisterPage() {
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
+    const [fieldErrors, setFieldErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
     const { register } = useAuth();
 
+    // Validación local
+    const validate = () => {
+        const errors = {};
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
+
+        if (!email || !emailRegex.test(email)) {
+            errors.email = 'Email inválido';
+        }
+        if (!username || !usernameRegex.test(username)) {
+            errors.username = 'Username: 3-30 caracteres, solo letras, números, guiones y guiones bajos';
+        }
+        if (!password || password.length < 8) {
+            errors.password = 'Password: al menos 8 caracteres';
+        } else {
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[^A-Za-z0-9]/.test(password);
+            if (!(hasUpper && hasLower && hasNumber && hasSpecial)) {
+                errors.password = 'Debe incluir mayúscula, minúscula, número y carácter especial';
+            }
+        }
+
+        setFieldErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     const handleSubmit = async (e) => {
         e?.preventDefault();
         setError('');
+        setFieldErrors({});
+
+        if (!validate()) {
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -28,11 +63,15 @@ export default function RegisterPage() {
                 body: { email, password, username },
             });
 
-            // Redirect to login after successful registration
             window.location.href = '/login';
         } catch (err) {
             console.error('Error registering:', err);
-            setError(err.message);
+            if (err.message?.includes?.('400')) {
+                // Si el backend devuelve errores específicos, los mostramos
+                setError('Por favor corrige los errores del formulario');
+            } else {
+                setError(err.message || 'Error al registrarse');
+            }
         } finally {
             setLoading(false);
         }
@@ -40,7 +79,6 @@ export default function RegisterPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
-            {/* Decorative elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                 <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
                 <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
@@ -48,13 +86,10 @@ export default function RegisterPage() {
             </div>
 
             <div className="w-full max-w-md relative z-10 animate-fade-in">
-                {/* Logo/Brand */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center mb-4">
                         <Sparkles className="text-blue-400 w-10 h-10" />
-
                     </div>
-
                     <h1 className="text-4xl font-bold text-gray-900 mb-2">
                         MiniBio.ar
                     </h1>
@@ -63,7 +98,6 @@ export default function RegisterPage() {
                     </p>
                 </div>
 
-                {/* Login Card */}
                 <Card className='p-6 ' variant="glass" padding="large">
                     <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
                         Registrarme
@@ -86,6 +120,7 @@ export default function RegisterPage() {
                             placeholder="Nombre de usuario"
                             label="Nombre de usuario"
                             required
+                            error={fieldErrors.username}
                             icon={
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -99,6 +134,7 @@ export default function RegisterPage() {
                             placeholder="tu@email.com"
                             label="Email"
                             required
+                            error={fieldErrors.email}
                             icon={
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
@@ -113,6 +149,7 @@ export default function RegisterPage() {
                             placeholder="••••••••"
                             label="Contraseña"
                             required
+                            error={fieldErrors.password}
                             icon={
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -144,7 +181,6 @@ export default function RegisterPage() {
                     </div>
                 </Card>
 
-                {/* Footer */}
                 <p className="text-center text-xs text-gray-500 mt-8">
                     Al continuar, aceptas nuestros <Link href="/terms" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline">términos y condiciones</Link>
                 </p>
