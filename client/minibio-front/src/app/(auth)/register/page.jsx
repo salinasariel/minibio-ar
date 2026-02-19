@@ -44,6 +44,34 @@ export default function RegisterPage() {
         return Object.keys(errors).length === 0;
     };
 
+    // Validación local
+    const validate = () => {
+        const errors = {};
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/;
+
+        if (!email || !emailRegex.test(email)) {
+            errors.email = 'Email inválido';
+        }
+        if (!username || !usernameRegex.test(username)) {
+            errors.username = 'Username: 3-30 caracteres, solo letras, números, guiones y guiones bajos';
+        }
+        if (!password || password.length < 8) {
+            errors.password = 'Password: al menos 8 caracteres';
+        } else {
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[^A-Za-z0-9]/.test(password);
+            if (!(hasUpper && hasLower && hasNumber && hasSpecial)) {
+                errors.password = 'Debe incluir mayúscula, minúscula, número y carácter especial';
+            }
+        }
+
+        setFieldErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     const handleSubmit = async (e) => {
         e?.preventDefault();
         setError('');
@@ -65,6 +93,15 @@ export default function RegisterPage() {
         } catch (err) {
             console.error('Error registering:', err);
             setError(err.message || 'Error al registrarse');
+            window.location.href = '/login';
+        } catch (err) {
+            console.error('Error registering:', err);
+            if (err.message?.includes?.('400')) {
+                // Si el backend devuelve errores específicos, los mostramos
+                setError('Por favor corrige los errores del formulario');
+            } else {
+                setError(err.message || 'Error al registrarse');
+            }
         } finally {
             setLoading(false);
         }

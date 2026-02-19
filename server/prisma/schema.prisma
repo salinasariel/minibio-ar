@@ -36,8 +36,20 @@ model Page {
   links      Link[]
   orders     Order[]
   menus      Menu[]
+  views      PageView[]
 
   @@map("pages")
+}
+
+model PageView {
+  id        Int      @id @default(autoincrement())
+  page_id   Int
+  page      Page     @relation(fields: [page_id], references: [id], onDelete: Cascade)
+  ip        String?
+  user_agent String?
+  created_at DateTime @default(now())
+
+  @@map("page_views")
 }
 
 model Link {

@@ -25,4 +25,7 @@ router.put('/:pageId', verifyToken, pageController.updatePage);
 // Eliminar página
 router.delete('/:pageId', verifyToken, pageController.deletePage);
 
+// Obtener estadísticas propias
+router.get('/stats', verifyToken, pageController.getMyStats);
+
 module.exports = router;

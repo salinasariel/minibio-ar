@@ -97,9 +97,6 @@ exports.register = async (req, res) => {
         username,
         password_hash: hashedPassword,
         display_name: display_name || username,
-        email_verified: false,
-        verification_token: verificationToken,
-        token_expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });
 
