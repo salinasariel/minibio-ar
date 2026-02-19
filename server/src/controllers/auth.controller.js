@@ -2,8 +2,40 @@ const prisma = require('../models/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+// Validación helper
+function validateRegister(data) {
+  const errors = [];
+
+  if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    errors.push('Email inválido');
+  }
+
+  if (!data.username || !/^[a-zA-Z0-9_-]{3,30}$/.test(data.username)) {
+    errors.push('Username debe tener 3-30 caracteres, solo letras, números, guiones y guiones bajos');
+  }
+
+  if (!data.password || data.password.length < 8) {
+    errors.push('Password debe tener al menos 8 caracteres');
+  } else {
+    const hasUpper = /[A-Z]/.test(data.password);
+    const hasLower = /[a-z]/.test(data.password);
+    const hasNumber = /[0-9]/.test(data.password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(data.password);
+    if (!(hasUpper && hasLower && hasNumber && hasSpecial)) {
+      errors.push('Password debe incluir mayúscula, minúscula, número y carácter especial');
+    }
+  }
+
+  return errors;
+}
+
 exports.register = async (req, res) => {
   const { email, password, username, display_name } = req.body;
+
+  const validationErrors = validateRegister({ email, password, username });
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ errors: validationErrors });
+  }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -13,7 +45,7 @@ exports.register = async (req, res) => {
         email,
         username,
         password_hash: hashedPassword,
-        display_name,
+        display_name: display_name || username,
       },
     });
 
