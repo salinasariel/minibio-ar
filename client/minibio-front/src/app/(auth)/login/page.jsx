@@ -6,12 +6,15 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Card from '@/components/Card';
 import { Sparkles } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState('');
 
   const { login } = useAuth();
 
@@ -29,9 +32,28 @@ export default function LoginPage() {
     setLoading(false);
   };
 
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError('Ingresa tu email primero');
+      return;
+    }
+    setResending(true);
+    setResendMsg('');
+    try {
+      await apiFetch('/auth/resend-verification', null, {
+        method: 'POST',
+        body: { email },
+      });
+      setResendMsg('Se ha reenviado el enlace de verificación a tu email');
+    } catch (err) {
+      setResendMsg(err.message || 'Error al reenviar');
+    } finally {
+      setResending(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
-      {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
@@ -39,25 +61,16 @@ export default function LoginPage() {
       </div>
 
       <div className="w-full max-w-md relative z-10 animate-fade-in">
-        {/* Logo/Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
             <Sparkles className="text-blue-400 w-10 h-10" />
           </div>
-
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            MiniBio.ar
-          </h1>
-          <p className="text-gray-600">
-            Tu (mini) link-in-bio personalizado
-          </p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">MiniBio.ar</h1>
+          <p className="text-gray-600">Tu (mini) link-in-bio personalizado</p>
         </div>
 
-        {/* Login Card */}
         <Card className='p-6 ' variant="glass" padding="large">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            Iniciar Sesión
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Iniciar Sesión</h2>
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-center gap-3 animate-slide-up">
@@ -65,6 +78,19 @@ export default function LoginPage() {
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
               <p className="text-sm text-red-800 font-medium">{error}</p>
+            </div>
+          )}
+
+          {resendMsg && (
+            <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 animate-slide-up ${resendMsg.includes('reenviado') ? 'bg-green-50 border-2 border-green-200' : 'bg-red-50 border-2 border-red-200'}`}>
+              <svg className={`w-5 h-5 flex-shrink-0 ${resendMsg.includes('reenviado') ? 'text-green-600' : 'text-red-600'}`} fill="currentColor" viewBox="0 0 20 20">
+                {resendMsg.includes('reenviado') ? (
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                ) : (
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                )}
+              </svg>
+              <p className={`text-sm font-medium ${resendMsg.includes('reenviado') ? 'text-green-800' : 'text-red-800'}`}>{resendMsg}</p>
             </div>
           )}
 
@@ -108,20 +134,27 @@ export default function LoginPage() {
             </Button>
           </div>
 
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resending || !email}
+              className="text-sm text-blue-600 hover:text-blue-700 hover:underline disabled:opacity-50"
+            >
+              {resending ? 'Reenviando...' : '¿No recibiste el email de verificación? Reenvía'}
+            </button>
+          </div>
+
           <div className="mt-6 pt-6 border-t border-gray-200">
             <p className="text-center text-sm text-gray-600">
               ¿No tienes cuenta?{' '}
-              <Link
-                href="/register"
-                className="font-semibold text-blue-600 hover:text-blue-700 hover:underline"
-              >
+              <Link href="/register" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline">
                 Regístrate gratis
               </Link>
             </p>
           </div>
         </Card>
 
-        {/* Footer */}
         <p className="text-center text-xs text-gray-500 mt-8">
           Al continuar, aceptas nuestros <Link href="/terms" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline">términos y condiciones</Link>
         </p>
