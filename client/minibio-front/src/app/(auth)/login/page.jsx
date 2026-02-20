@@ -123,6 +123,12 @@ export default function LoginPage() {
               }
             />
 
+            <div className="text-right">
+              <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 hover:underline">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+
             <Button
               onClick={handleSubmit}
               variant="primary"

@@ -100,3 +100,15 @@ model MinibioParam {
 
   @@map("minibio_param")
 }
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  user_id   Int
+  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expires_at DateTime
+  used_at   DateTime?
+  created_at DateTime @default(now())
+
+  @@map("password_resets")
+}
