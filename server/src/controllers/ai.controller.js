@@ -1,7 +1,13 @@
 const prisma = require('../models/db');
 const { aiResponseSchema } = require('../lib/aiSchema');
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+// Modelos a intentar en orden (los nombres de Google rotan seguido)
+const GEMINI_MODELS = [
+  process.env.GEMINI_MODEL,
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-flash-latest',
+].filter(Boolean);
 const DAILY_LIMIT = 15;
 
 // Rate limit en memoria: userId -> { day, count }
@@ -85,27 +91,43 @@ exports.generatePage = async (req, res) => {
       ? `\n\nESTADO ACTUAL DE LA PÁGINA (para que sepas qué existe; no repitas lo que no cambia):\n${JSON.stringify(current).slice(0, 4000)}`
       : '';
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: [{ role: 'user', parts: [{ text: `${prompt.trim()}${context}` }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048,
-            responseMimeType: 'application/json',
-          },
-        }),
-      }
-    );
+    const payload = JSON.stringify({
+      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      contents: [{ role: 'user', parts: [{ text: `${prompt.trim()}${context}` }] }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+        responseMimeType: 'application/json',
+      },
+    });
 
-    if (!geminiRes.ok) {
-      const detail = await geminiRes.text().catch(() => '');
-      console.error('Gemini error:', geminiRes.status, detail.slice(0, 300));
-      return res.status(502).json({ error: 'El asistente no respondió, probá de nuevo' });
+    // Intentar cada modelo hasta que uno responda
+    let geminiRes = null;
+    let lastStatus = null;
+    for (const model of GEMINI_MODELS) {
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }
+      );
+      if (r.ok) {
+        geminiRes = r;
+        break;
+      }
+      lastStatus = r.status;
+      const detail = await r.text().catch(() => '');
+      console.error(`Gemini error (${model}):`, r.status, detail.slice(0, 300));
+      // 401/403 = problema de key: no tiene sentido probar otros modelos
+      if (r.status === 401 || r.status === 403) break;
+    }
+
+    if (!geminiRes) {
+      const hint =
+        lastStatus === 401 || lastStatus === 403
+          ? 'la API key parece inválida o sin permisos'
+          : lastStatus === 429
+            ? 'se agotó la cuota gratuita del día'
+            : `HTTP ${lastStatus}`;
+      return res.status(502).json({ error: `El asistente no respondió (${hint})` });
     }
 
     const data = await geminiRes.json();
