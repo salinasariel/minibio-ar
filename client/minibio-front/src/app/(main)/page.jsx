@@ -16,16 +16,15 @@ export default function MiniBioLanding() {
 
   const features = [
     { icon: Globe, title: 'Tu página con tu nombre', desc: 'tunegocio.minibio.ar con todos tus links en un solo lugar' },
-    { icon: UtensilsCrossed, title: 'Menú con fotos y precios', desc: 'Cargá tus productos o tu carta, con fotos que se ven en grande' },
+    { icon: UtensilsCrossed, title: 'Menú con fotos y precios', desc: 'Cargá tus productos o tu carta' },
     { icon: BarChart3, title: 'Estadísticas', desc: 'Visitas, clicks por link y actividad de los últimos días' }
   ];
 
   const benefits = [
     'Tu dirección propia: elegís el nombre de tu página',
-    'Links ordenables arrastrando, con contador de clicks',
     'Menú o catálogo con fotos, precios y descripciones',
-    'Foto de perfil y colores a tu gusto (o al azar, si te da igual)',
-    'Código QR listo para imprimir y botón de compartir por WhatsApp',
+    'Foto de perfil y colores a tu gusto',
+    'Código QR listo para imprimir y botón de compartir',
     'Estadísticas de visitas y clicks de todas tus páginas',
   ];
 
@@ -72,7 +71,7 @@ export default function MiniBioLanding() {
                 </span>
               </h1>
               <p className="text-xl md:text-2xl text-purple-200 mb-6 max-w-2xl mx-auto">
-                Armá tu página con tus links, tu menú o catálogo, y compartila con un link o un QR. Pensado para emprendedores y negocios de acá.
+                Armá tu página con tus links, tu menú o catálogo, y compartila con un link o un QR. Pensado para emprendedores y negocios.
               </p>
 
               {/* Aviso gratuito */}
@@ -122,7 +121,7 @@ export default function MiniBioLanding() {
                 <span className="block text-yellow-400">con MiniBio</span>
               </h2>
               <p className="text-xl text-purple-200">
-                Sin vueltas: lo que ves es lo que hay, y se actualiza seguido
+                Sin vueltas: lo que ves es lo que hay, y actualizamos seguido
               </p>
             </div>
 
@@ -153,7 +152,7 @@ export default function MiniBioLanding() {
               Compartila como quieras
             </h2>
             <p className="text-xl text-purple-200 mb-10 max-w-2xl mx-auto">
-              Cada página tiene su código QR para descargar e imprimir, y un botón para mandarla por WhatsApp o la app que uses. Ideal para la mesa del local o la bio de Instagram.
+              Cada página tiene su código QR para descargar e imprimir, y un botón de compartir. Ideal para la mesa del local o la bio de Instagram.
             </p>
             <a
               href="https://app.minibio.ar/register"
