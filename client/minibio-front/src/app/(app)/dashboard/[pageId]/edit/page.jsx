@@ -74,6 +74,9 @@ export default function EditPage(props) {
         theme: page?.theme,
         whatsapp: pageWhatsapp,
         address: pageAddress,
+        payment_alias: paymentAlias,
+        payment_link: paymentLink,
+        reviews_url: reviewsUrl,
         hours: pageHours,
         links: links.map((l) => ({ title: l.title, url: l.url })),
         products: menuItems.map((m) => ({ product_name: m.product_name, category: m.category, price: m.price })),
@@ -103,6 +106,9 @@ export default function EditPage(props) {
       if (p.bio !== undefined) body.bio = p.bio;
       if (p.whatsapp) body.whatsapp = p.whatsapp;
       if (p.address) body.address = p.address;
+      if (p.payment_alias) body.payment_alias = p.payment_alias;
+      if (p.payment_link) body.payment_link = p.payment_link;
+      if (p.reviews_url) body.reviews_url = p.reviews_url;
       if (p.hours) body.hours = p.hours;
       if (p.theme) {
         // Merge de tokens sobre el theme actual
@@ -1408,6 +1414,15 @@ export default function EditPage(props) {
                   )}
                   {aiProposal.page.address && (
                     <div className="p-3"><span className="text-gray-500">Dirección:</span> <span className="text-gray-800">{aiProposal.page.address}</span></div>
+                  )}
+                  {aiProposal.page.payment_alias && (
+                    <div className="p-3"><span className="text-gray-500">Alias de pago:</span> <span className="font-mono text-gray-800">{aiProposal.page.payment_alias}</span></div>
+                  )}
+                  {aiProposal.page.payment_link && (
+                    <div className="p-3"><span className="text-gray-500">Link MercadoPago:</span> <span className="text-gray-800 text-xs">{aiProposal.page.payment_link}</span></div>
+                  )}
+                  {aiProposal.page.reviews_url && (
+                    <div className="p-3"><span className="text-gray-500">Reseñas Google:</span> <span className="text-gray-800 text-xs">{aiProposal.page.reviews_url}</span></div>
                   )}
                   {aiProposal.page.hours && (
                     <div className="p-3"><span className="text-gray-500">Horarios:</span> <span className="text-gray-800">se actualizan</span></div>

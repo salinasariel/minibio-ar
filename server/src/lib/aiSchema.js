@@ -42,6 +42,31 @@ const aiPageSchema = z
     theme: themeTokensSchema.optional(),
     whatsapp: z.string().trim().max(20).optional(),
     address: z.string().trim().max(120).optional(),
+    payment_alias: z.string().trim().max(60).optional(),
+    payment_link: z
+      .string()
+      .trim()
+      .max(300)
+      .url()
+      .refine((u) => {
+        try {
+          const h = new URL(u).hostname.toLowerCase();
+          return h === 'mpago.la' || h.endsWith('mercadopago.com.ar') || h.endsWith('mercadopago.com');
+        } catch { return false; }
+      })
+      .optional(),
+    reviews_url: z
+      .string()
+      .trim()
+      .max(300)
+      .url()
+      .refine((u) => {
+        try {
+          const h = new URL(u).hostname.toLowerCase();
+          return h === 'g.page' || h === 'maps.app.goo.gl' || h.endsWith('google.com') || h.endsWith('google.com.ar');
+        } catch { return false; }
+      })
+      .optional(),
     hours: z
       .object({ mon: aiDay, tue: aiDay, wed: aiDay, thu: aiDay, fri: aiDay, sat: aiDay, sun: aiDay })
       .strict()
