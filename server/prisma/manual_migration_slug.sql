@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS password_resets (
 -- 4b. features: whatsapp + horarios en pages, categoría en menus
 ALTER TABLE pages ADD COLUMN IF NOT EXISTS whatsapp TEXT;
 ALTER TABLE pages ADD COLUMN IF NOT EXISTS hours JSONB;
+ALTER TABLE pages ADD COLUMN IF NOT EXISTS address TEXT;
 ALTER TABLE menus ADD COLUMN IF NOT EXISTS category TEXT;
 
 -- 5. stat_events: analítica de visitas y clicks

@@ -7,6 +7,7 @@ import Card from '@/components/Card';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Link from 'next/link';
+import { TEMPLATES } from '@/lib/templates';
 
 export default function DashboardPage() {
   const { user, token, loading, logout } = useAuth();
@@ -18,6 +19,8 @@ export default function DashboardPage() {
   const [success, setSuccess] = useState('');
   const [isLoadingPages, setIsLoadingPages] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null); // key de TEMPLATES o null
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -48,18 +51,42 @@ export default function DashboardPage() {
       return;
     }
 
+    setCreating(true);
     try {
+      const template = selectedTemplate ? TEMPLATES[selectedTemplate] : null;
+
       const newPage = await apiFetch('/pages/create', token, {
         method: 'POST',
-        body: { title: newPageTitle, bio: '' },
+        body: {
+          title: newPageTitle,
+          bio: template?.bio || '',
+          theme: template?.theme || null,
+        },
       });
+
+      // Plantilla: crear los links de ejemplo
+      if (template) {
+        for (const link of template.links) {
+          await apiFetch('/links', token, {
+            method: 'POST',
+            body: { page_id: newPage.id, title: link.title, url: link.url },
+          });
+        }
+        // Llevar directo al editor para que personalice los placeholders
+        router.push(`/dashboard/${newPage.id}/edit`);
+        return;
+      }
+
       setPages([newPage, ...pages]);
       setNewPageTitle('');
+      setSelectedTemplate(null);
       setShowCreateForm(false);
       setSuccess('¡Página creada exitosamente!');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -159,8 +186,39 @@ export default function DashboardPage() {
                   label="Nombre de la página"
                   required
                 />
+
+                {/* Plantillas */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Arrancá con una plantilla (opcional)
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {Object.entries(TEMPLATES).map(([key, t]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setSelectedTemplate(selectedTemplate === key ? null : key)}
+                        className={`p-3 rounded-xl border-2 text-left transition-all ${
+                          selectedTemplate === key
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 bg-white hover:border-gray-300'
+                        }`}
+                      >
+                        <span className="text-2xl">{t.emoji}</span>
+                        <p className="text-sm font-semibold text-gray-900 mt-1">{t.name}</p>
+                        <p className="text-xs text-gray-500">{t.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                  {selectedTemplate && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Se crean links de ejemplo y un tema acorde. Después los editás con tus datos.
+                    </p>
+                  )}
+                </div>
+
                 <div className="flex gap-3">
-                  <Button onClick={handleCreatePage} variant="primary" fullWidth>
+                  <Button onClick={handleCreatePage} variant="primary" fullWidth loading={creating}>
                     Crear Página
                   </Button>
                   <Button

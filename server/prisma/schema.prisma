@@ -36,6 +36,7 @@ model Page {
   bio        String?
   avatar_url String?
   whatsapp   String? // número para el botón destacado (solo dígitos)
+  address    String? // dirección física, para el link a Google Maps
   hours      Json? // horarios: { mon: {open,close,closed}, ... }
   theme      Json?
   created_at DateTime @default(now())

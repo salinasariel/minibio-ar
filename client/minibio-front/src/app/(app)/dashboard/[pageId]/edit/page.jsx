@@ -39,6 +39,8 @@ export default function EditPage(props) {
   const [customTo, setCustomTo] = useState('#ec4899');
   const [pageAvatar, setPageAvatar] = useState(''); // data-URL o URL
   const [pageWhatsapp, setPageWhatsapp] = useState('');
+  const [pageAddress, setPageAddress] = useState('');
+  const [tab, setTab] = useState('pagina'); // 'pagina' | 'links' | 'productos'
   const [pageHours, setPageHours] = useState({}); // { mon: {closed, open, close}, ... }
   const [showHours, setShowHours] = useState(false);
   const [compressingAvatar, setCompressingAvatar] = useState(false);
@@ -105,6 +107,7 @@ export default function EditPage(props) {
       setPageSlug(data.slug || '');
       setPageAvatar(data.avatar_url || '');
       setPageWhatsapp(data.whatsapp || '');
+      setPageAddress(data.address || '');
       setPageHours(data.hours || {});
       setShowHours(Boolean(data.hours));
       if (data.theme?.from && data.theme?.to) {
@@ -151,6 +154,7 @@ export default function EditPage(props) {
           slug: pageSlug || undefined,
           avatar_url: pageAvatar || '',
           whatsapp: pageWhatsapp || '',
+          address: pageAddress || '',
           hours: showHours && Object.keys(pageHours).length > 0 ? pageHours : null,
           theme:
             pageTheme === 'custom'
@@ -411,7 +415,29 @@ export default function EditPage(props) {
           </div>
         )}
 
+        {/* Pestañas */}
+        <div className="flex gap-1 mb-6 bg-white/60 backdrop-blur rounded-2xl p-1.5 border border-gray-200/60">
+          {[
+            { key: 'pagina', label: 'Página' },
+            { key: 'links', label: `Links (${links.length})` },
+            { key: 'productos', label: `Productos (${menuItems.length})` },
+          ].map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                tab === t.key
+                  ? 'bg-blue-600 text-white shadow'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
         {/* Configuración de la página */}
+        {tab === 'pagina' && (
         <Card variant="glass" padding="large" className="mb-8 p-5">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Configuración de la página</h2>
           <div className="text-gray-700 space-y-4">
@@ -497,6 +523,23 @@ export default function EditPage(props) {
               />
               <p className="text-xs text-gray-400 mt-1">
                 Si lo cargás, tu página muestra un botón verde "Pedinos por WhatsApp". Con código de país (54 para Argentina).
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Dirección (opcional)
+              </label>
+              <input
+                type="text"
+                value={pageAddress}
+                onChange={(e) => setPageAddress(e.target.value)}
+                placeholder="Av. Corrientes 1234, CABA"
+                maxLength={120}
+                className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Tu página muestra la dirección con un link a Google Maps ("cómo llegar").
               </p>
             </div>
 
@@ -653,8 +696,11 @@ export default function EditPage(props) {
             </Button>
           </div>
         </Card>
+        )}
 
         {/* Formulario Agregar Link */}
+        {tab === 'links' && (
+        <>
         <Card variant="glass" padding="large" className="mb-8 p-5">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Añadir Nuevo Link</h2>
           <div className="text-gray-500 space-y-4">
@@ -772,10 +818,14 @@ export default function EditPage(props) {
             ))}
           </div>
         )}
+        </>
+        )}
 
         {/* Menú digital */}
+        {tab === 'productos' && (
+        <>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Menú digital ({menuItems.length})</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Productos ({menuItems.length})</h2>
           {!showMenuForm && (
             <Button onClick={() => setShowMenuForm(true)} variant="primary" size="small">
               + Agregar producto
@@ -934,6 +984,8 @@ export default function EditPage(props) {
               </Card>
             ))}
           </div>
+        )}
+        </>
         )}
       </div>
     </div>
