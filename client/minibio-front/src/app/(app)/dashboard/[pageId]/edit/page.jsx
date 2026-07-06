@@ -78,8 +78,8 @@ export default function EditPage(props) {
         payment_link: paymentLink,
         reviews_url: reviewsUrl,
         hours: pageHours,
-        links: links.map((l) => ({ title: l.title, url: l.url })),
-        products: menuItems.map((m) => ({ product_name: m.product_name, category: m.category, price: m.price })),
+        links: links.map((l) => ({ id: l.id, title: l.title, url: l.url })),
+        products: menuItems.map((m) => ({ id: m.id, product_name: m.product_name, category: m.category, price: m.price })),
       };
       const data = await apiFetch('/ai/page', token, {
         method: 'POST',
@@ -100,8 +100,32 @@ export default function EditPage(props) {
     setAiApplying(true);
     setError('');
     try {
-      // Campos de página: solo los que la IA propuso
+      // 1. Borrados (replace_all = borrar todo; si no, los ids puntuales)
+      const linkIdsToDelete = p.replace_all
+        ? links.map((l) => l.id)
+        : (p.remove_link_ids || []).filter((id) => links.some((l) => l.id === id));
+      const productIdsToDelete = p.replace_all
+        ? menuItems.map((m) => m.id)
+        : (p.remove_product_ids || []).filter((id) => menuItems.some((m) => m.id === id));
+
+      for (const id of linkIdsToDelete) {
+        await apiFetch(`/links/${id}`, token, { method: 'DELETE' });
+      }
+      for (const id of productIdsToDelete) {
+        await apiFetch(`/menus/${id}`, token, { method: 'DELETE' });
+      }
+
+      // 2. Campos de página: solo los que la IA propuso
       const body = {};
+
+      // Secciones a vaciar
+      for (const s of p.clear_sections || []) {
+        if (s === 'whatsapp') body.whatsapp = '';
+        if (s === 'address') body.address = '';
+        if (s === 'hours') body.hours = null;
+        if (s === 'payment') { body.payment_alias = ''; body.payment_link = ''; }
+        if (s === 'reviews') body.reviews_url = '';
+      }
       if (p.title) body.title = p.title;
       if (p.bio !== undefined) body.bio = p.bio;
       if (p.whatsapp) body.whatsapp = p.whatsapp;
@@ -1383,6 +1407,43 @@ export default function EditPage(props) {
                   </div>
                 )}
                 <div className="border border-gray-200 rounded-xl divide-y divide-gray-100 text-sm mb-4">
+                  {aiProposal.page.replace_all && (
+                    <div className="p-3 bg-red-50 text-red-700 font-semibold">
+                      🔄 Rehacer de cero: se borran los {links.length} links y {menuItems.length} productos actuales
+                    </div>
+                  )}
+                  {!aiProposal.page.replace_all && (aiProposal.page.remove_link_ids || []).length > 0 && (
+                    <div className="p-3 bg-red-50">
+                      <span className="text-red-600 font-medium">Links que se borran:</span>
+                      <ul className="mt-1 space-y-0.5">
+                        {aiProposal.page.remove_link_ids.map((id) => {
+                          const l = links.find((x) => x.id === id);
+                          return l ? <li key={id} className="text-red-700">− {l.title}</li> : null;
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                  {!aiProposal.page.replace_all && (aiProposal.page.remove_product_ids || []).length > 0 && (
+                    <div className="p-3 bg-red-50">
+                      <span className="text-red-600 font-medium">Productos que se borran:</span>
+                      <ul className="mt-1 space-y-0.5">
+                        {aiProposal.page.remove_product_ids.map((id) => {
+                          const m = menuItems.find((x) => x.id === id);
+                          return m ? <li key={id} className="text-red-700">− {m.product_name}</li> : null;
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                  {(aiProposal.page.clear_sections || []).length > 0 && (
+                    <div className="p-3 bg-red-50">
+                      <span className="text-red-600 font-medium">Secciones que se vacían:</span>{' '}
+                      <span className="text-red-700">
+                        {aiProposal.page.clear_sections
+                          .map((s) => ({ whatsapp: 'WhatsApp', address: 'Ubicación', hours: 'Horarios', payment: 'Datos de pago', reviews: 'Reseñas' }[s]))
+                          .join(', ')}
+                      </span>
+                    </div>
+                  )}
                   {aiProposal.page.title && (
                     <div className="p-3"><span className="text-gray-500">Título:</span> <span className="font-semibold text-gray-900">{aiProposal.page.title}</span></div>
                   )}

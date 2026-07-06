@@ -52,6 +52,14 @@ export function getThemeView(theme) {
   return { className: preset.background, style: undefined, fontClass };
 }
 
+// Luminancia relativa de un color hex (0 = negro, 1 = blanco)
+function luminance(hexColor) {
+  const r = parseInt(hexColor.slice(1, 3), 16) / 255;
+  const g = parseInt(hexColor.slice(3, 5), 16) / 255;
+  const b = parseInt(hexColor.slice(5, 7), 16) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
 // Estilo de los botones de links según tokens (variant/radius/color).
 // Sin tokens devuelve el look "glass" de siempre.
 export function getButtonView(theme) {
@@ -60,15 +68,22 @@ export function getButtonView(theme) {
   const color = b.color && HEX.test(b.color) ? b.color : null;
 
   if (b.variant === 'solid') {
+    const bg = color || '#ffffff';
+    // Texto oscuro sobre botones claros, blanco sobre oscuros (contraste garantizado)
+    const text = luminance(bg) > 0.55 ? '#111827' : '#ffffff';
     return {
-      className: `${radius} border-2 border-transparent`,
-      style: { backgroundColor: color || 'rgba(255,255,255,0.92)', color: color ? '#ffffff' : '#111827' },
+      className: `${radius} border-2 border-transparent shadow-lg`,
+      style: { backgroundColor: bg, color: text },
     };
   }
   if (b.variant === 'outline') {
     return {
       className: `${radius} bg-transparent border-2`,
-      style: { borderColor: color || 'rgba(255,255,255,0.8)', color: '#ffffff' },
+      // Borde del color elegido solo si es claro (visible sobre el fondo); texto siempre blanco
+      style: {
+        borderColor: color && luminance(color) > 0.4 ? color : 'rgba(255,255,255,0.85)',
+        color: '#ffffff',
+      },
     };
   }
   // glass (default)

@@ -91,6 +91,16 @@ const aiPageSchema = z
       )
       .max(25)
       .optional(),
+    // Borrados: por id (los ids vienen en el estado actual)
+    remove_link_ids: z.array(z.number().int().positive()).max(50).optional(),
+    remove_product_ids: z.array(z.number().int().positive()).max(50).optional(),
+    // Vaciar secciones enteras de la página
+    clear_sections: z
+      .array(z.enum(['whatsapp', 'address', 'hours', 'payment', 'reviews']))
+      .max(5)
+      .optional(),
+    // Rehacer de cero: borra TODOS los links y productos antes de crear los nuevos
+    replace_all: z.boolean().optional(),
   })
   .strict();
 
