@@ -56,11 +56,20 @@ export default function RegisterPage() {
         setLoading(true);
 
         try {
-            await apiFetch('/auth/register', null, {
+            const data = await apiFetch('/auth/register', null, {
                 method: 'POST',
                 body: { email, password, username },
             });
 
+            if (data?.token) {
+                // Sin verificación de email (dev/SMTP no configurado): auto-login
+                localStorage.setItem('jwt_token', data.token);
+                localStorage.setItem('user_data', JSON.stringify(data.user));
+                window.location.href = '/dashboard';
+                return;
+            }
+
+            // Con verificación: mostrar pantalla "revisá tu email"
             setRegistered(true);
         } catch (err) {
             console.error('Error registering:', err);

@@ -4,19 +4,18 @@ const publicController = require('../controllers/public.controller');
 
 // ========================================
 // RUTAS PÚBLICAS (sin autenticación)
+// Las rutas específicas van ANTES que /:username
 // ========================================
 
-// Obtener perfil público por username
-// Ejemplo: GET /api/public/juan_perez
-router.get('/:username', publicController.getPublicProfile);
+// Página pública por slug (endpoint canónico del perfil)
+// Ejemplo: GET /api/public/page-by-slug/mi-cafe
+router.get('/page-by-slug/:slug', publicController.getPageBySlug);
 
-// Obtener página pública por ID (alternativa - opcional)
-// Ejemplo: GET /api/public/page/123
-router.get('/page/:pageId', publicController.getPublicPage);
-
-
+// Parámetros públicos (i18n / textos)
 router.get('/paramPublic/:paramCode/:language', publicController.getPublicParams);
 
-
+// Perfil público por username (primera página del usuario)
+// Ejemplo: GET /api/public/juan_perez
+router.get('/:username', publicController.getPublicProfile);
 
 module.exports = router;

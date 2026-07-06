@@ -225,9 +225,22 @@ export default function DashboardPage() {
                       <h3 className="text-xl font-bold text-gray-900 mb-1">
                         {page.title}
                       </h3>
-                      <p className="text-sm text-gray-500 mb-3">
+                      <p className="text-sm text-gray-500 mb-1">
                         {page.bio || 'Sin descripción'}
                       </p>
+                      {page.slug && (
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(`https://${page.slug}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar'}`);
+                            setSuccess('¡Link copiado!');
+                            setTimeout(() => setSuccess(''), 2000);
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-700 hover:underline mb-3 block"
+                          title="Copiar link público"
+                        >
+                          {page.slug}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar'} ⧉
+                        </button>
+                      )}
                       <div className="flex items-center gap-4 text-xs text-gray-500">
                         <span className="flex items-center gap-1">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

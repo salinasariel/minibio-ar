@@ -1,68 +1,47 @@
 const prisma = require('../models/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
-// ========================================
-// VALIDACIONES
-// ========================================
-function validateRegister(data) {
-  const errors = [];
+const TOKEN_EXPIRY = '7d';
 
-  if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-    errors.push('Email inválido');
-  }
+const signToken = (user) =>
+  jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, {
+    expiresIn: TOKEN_EXPIRY,
+  });
 
-  if (!data.username || !/^[a-zA-Z0-9_-]{3,30}$/.test(data.username)) {
-    errors.push('Username debe tener 3-30 caracteres, solo letras, números, guiones y guiones bajos');
-  }
+const publicUser = (user) => ({
+  id: user.id,
+  email: user.email,
+  username: user.username,
+  display_name: user.display_name,
+});
 
-  if (!data.password || data.password.length < 8) {
-    errors.push('Password debe tener al menos 8 caracteres');
-  } else {
-    const hasUpper = /[A-Z]/.test(data.password);
-    const hasLower = /[a-z]/.test(data.password);
-    const hasNumber = /[0-9]/.test(data.password);
-    const hasSpecial = /[^A-Za-z0-9]/.test(data.password);
-    if (!(hasUpper && hasLower && hasNumber && hasSpecial)) {
-      errors.push('Password debe incluir mayúscula, minúscula, número y carácter especial');
-    }
-  }
-
-  return errors;
-}
+const generateToken = (length = 32) => crypto.randomBytes(length).toString('hex');
 
 // ========================================
 // HELPER: ENVÍO DE EMAIL (SMTP config)
 // ========================================
-async function sendEmail(to, subject, html) {
-  const {
-    SMTP_HOST,
-    SMTP_PORT,
-    SMTP_USER,
-    SMTP_PASS,
-    SMTP_FROM,
-    APP_URL = 'http://localhost:3000',
-  } = process.env;
+const smtpConfigured = () => {
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
+  return Boolean(SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && SMTP_FROM);
+};
 
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS || !SMTP_FROM) {
+async function sendEmail(to, subject, html) {
+  if (!smtpConfigured()) {
     console.log('SMTP no configurado, skipping email');
     return;
   }
 
   const nodemailer = require('nodemailer');
   const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: parseInt(SMTP_PORT),
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT),
     secure: true,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   });
 
-  await transporter.sendMail({
-    from: SMTP_FROM,
-    to,
-    subject,
-    html,
-  });
+  await transporter.sendMail({ from: process.env.SMTP_FROM, to, subject, html });
 }
 
 async function sendVerificationEmail(email, token) {
@@ -86,24 +65,18 @@ async function sendPasswordResetEmail(email, token) {
   `);
 }
 
-function generateToken(length = 32) {
-  return require('crypto').randomBytes(length).toString('hex');
-}
-
 // ========================================
 // REGISTRO
+// Con SMTP configurado: requiere verificación por email.
+// Sin SMTP (dev): auto-verifica y devuelve token (auto-login).
 // ========================================
 exports.register = async (req, res) => {
   const { email, password, username, display_name } = req.body;
 
-  const validationErrors = validateRegister({ email, password, username });
-  if (validationErrors.length > 0) {
-    return res.status(400).json({ errors: validationErrors });
-  }
-
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationToken = generateToken();
+    const requiresVerification = smtpConfigured();
+    const verificationToken = requiresVerification ? generateToken() : null;
 
     const user = await prisma.user.create({
       data: {
@@ -111,70 +84,72 @@ exports.register = async (req, res) => {
         username,
         password_hash: hashedPassword,
         display_name: display_name || username,
-        email_verified: false,
+        email_verified: !requiresVerification,
         verification_token: verificationToken,
-        token_expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        token_expires: requiresVerification
+          ? new Date(Date.now() + 24 * 60 * 60 * 1000)
+          : null,
       },
     });
 
-    await sendVerificationEmail(email, verificationToken).catch((err) => {
-      console.error('Error enviando email de verificación:', err);
-    });
+    if (requiresVerification) {
+      await sendVerificationEmail(email, verificationToken).catch((err) => {
+        console.error('Error enviando email de verificación:', err);
+      });
 
+      return res.status(201).json({
+        message: 'Usuario creado exitosamente. Revisa tu email para verificar.',
+        requiresVerification: true,
+      });
+    }
+
+    // Sin verificación: auto-login
+    const token = signToken(user);
     res.status(201).json({
-      message: 'Usuario creado exitosamente. Revisa tu email para verificar.',
-      userId: user.id,
+      message: 'Usuario creado exitosamente',
+      token,
+      user: publicUser(user),
     });
   } catch (error) {
     if (error.code === 'P2002') {
       return res.status(409).json({ error: 'El email o username ya existe' });
     }
-    res.status(500).json({ error: 'Error al registrar el usuario', details: error.message });
+    console.error('register error:', error);
+    res.status(500).json({ error: 'Error al registrar el usuario' });
   }
 };
 
 // ========================================
-// LOGIN (exigir email verificado)
+// LOGIN (exige email verificado)
 // ========================================
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
+    // Respuesta genérica: no revelar si el email existe o no
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: 'Email o contraseña incorrectos' });
     }
 
     if (!user.email_verified) {
-      return res.status(403).json({ error: 'Por favor verifica tu email antes de iniciar sesión' });
+      return res.status(403).json({
+        error: 'Por favor verifica tu email antes de iniciar sesión',
+        requiresVerification: true,
+      });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Contraseña incorrecta' });
-    }
-
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
+    const token = signToken(user);
 
     res.status(200).json({
       message: 'Login exitoso',
       token,
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-      },
+      user: publicUser(user),
     });
   } catch (error) {
-    res.status(500).json({ error: 'Error al iniciar sesión', details: error.message });
+    console.error('login error:', error);
+    res.status(500).json({ error: 'Error al iniciar sesión' });
   }
 };
 
@@ -212,7 +187,8 @@ exports.verifyEmail = async (req, res) => {
 
     res.status(200).json({ message: 'Email verificado exitosamente' });
   } catch (error) {
-    res.status(500).json({ error: 'Error al verificar email', details: error.message });
+    console.error('verifyEmail error:', error);
+    res.status(500).json({ error: 'Error al verificar email' });
   }
 };
 
@@ -227,9 +203,7 @@ exports.resendVerification = async (req, res) => {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await prisma.user.findUnique({ where: { email } });
 
     // Si no existe o ya verificado, respondemos OK para evitar enumeration
     if (!user || user.email_verified) {
@@ -252,7 +226,8 @@ exports.resendVerification = async (req, res) => {
 
     res.status(200).json({ message: 'Email de verificación reenviado' });
   } catch (error) {
-    res.status(500).json({ error: 'Error al reenviar verificación', details: error.message });
+    console.error('resendVerification error:', error);
+    res.status(500).json({ error: 'Error al reenviar verificación' });
   }
 };
 
@@ -267,19 +242,15 @@ exports.forgotPassword = async (req, res) => {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const user = await prisma.user.findUnique({ where: { email } });
 
     // Si no existe, no informamos para evitar enumeration
     if (!user) {
       return res.status(200).json({ message: 'Si el email existe, se ha enviado el enlace de recuperación' });
     }
 
-    // Generar token de reset
     const resetToken = generateToken();
 
-    // Crear registro de password reset
     await prisma.passwordReset.create({
       data: {
         user_id: user.id,
@@ -288,14 +259,14 @@ exports.forgotPassword = async (req, res) => {
       },
     });
 
-    // Enviar email
     await sendPasswordResetEmail(email, resetToken).catch((err) => {
       console.error('Error enviando email de recuperación:', err);
     });
 
     res.status(200).json({ message: 'Si el email existe, se ha enviado el enlace de recuperación' });
   } catch (error) {
-    res.status(500).json({ error: 'Error al procesar la solicitud', details: error.message });
+    console.error('forgotPassword error:', error);
+    res.status(500).json({ error: 'Error al procesar la solicitud' });
   }
 };
 
@@ -329,7 +300,8 @@ exports.verifyResetToken = async (req, res) => {
 
     res.status(200).json({ valid: true, email: passwordReset.user.email });
   } catch (error) {
-    res.status(500).json({ error: 'Error al verificar token', details: error.message });
+    console.error('verifyResetToken error:', error);
+    res.status(500).json({ error: 'Error al verificar token' });
   }
 };
 
@@ -341,19 +313,6 @@ exports.resetPassword = async (req, res) => {
 
   if (!token || !password) {
     return res.status(400).json({ error: 'Token y nueva contraseña son requeridos' });
-  }
-
-  // Validar password (misma lógica que en registro)
-  if (password.length < 8) {
-    return res.status(400).json({ errors: ['Password debe tener al menos 8 caracteres'] });
-  } else {
-    const hasUpper = /[A-Z]/.test(password);
-    const hasLower = /[a-z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    const hasSpecial = /[^A-Za-z0-9]/.test(password);
-    if (!(hasUpper && hasLower && hasNumber && hasSpecial)) {
-      return res.status(400).json({ errors: ['Password debe incluir mayúscula, minúscula, número y carácter especial'] });
-    }
   }
 
   try {
@@ -374,16 +333,13 @@ exports.resetPassword = async (req, res) => {
       return res.status(410).json({ error: 'Token ya utilizado' });
     }
 
-    // Hash nueva contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Actualizar contraseña del usuario
     await prisma.user.update({
       where: { id: passwordReset.user_id },
       data: { password_hash: hashedPassword },
     });
 
-    // Marcar token como usado
     await prisma.passwordReset.update({
       where: { id: passwordReset.id },
       data: { used_at: new Date() },
@@ -391,6 +347,7 @@ exports.resetPassword = async (req, res) => {
 
     res.status(200).json({ message: 'Contraseña restablecida exitosamente' });
   } catch (error) {
-    res.status(500).json({ error: 'Error al restablecer la contraseña', details: error.message });
+    console.error('resetPassword error:', error);
+    res.status(500).json({ error: 'Error al restablecer la contraseña' });
   }
 };

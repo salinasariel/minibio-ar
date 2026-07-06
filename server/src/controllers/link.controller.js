@@ -1,5 +1,12 @@
 const prisma = require('../models/db');
 
+// Helper: verifica que la página exista y pertenezca al usuario
+async function getOwnedPage(pageId, userId) {
+  const id = parseInt(pageId, 10);
+  if (Number.isNaN(id)) return null;
+  return prisma.page.findFirst({ where: { id, user_id: userId } });
+}
+
 // ========================================
 // CREAR LINK
 // ========================================
@@ -8,25 +15,20 @@ exports.createLink = async (req, res) => {
   const userId = req.user.userId;
 
   try {
-    // Verificar que la página pertenece al usuario
-    const page = await prisma.page.findUnique({
-      where: { id: page_id },
-    });
-
-    if (!page || page.user_id !== userId) {
+    const page = await getOwnedPage(page_id, userId);
+    if (!page) {
       return res.status(403).json({ error: 'No autorizado para modificar esta página' });
     }
 
-    // Obtener la posición máxima actual
     const maxPosition = await prisma.link.findFirst({
-      where: { page_id },
+      where: { page_id: page.id },
       orderBy: { position: 'desc' },
       select: { position: true },
     });
 
     const newLink = await prisma.link.create({
       data: {
-        page_id,
+        page_id: page.id,
         title,
         url,
         position: maxPosition ? maxPosition.position + 1 : 0,
@@ -35,40 +37,33 @@ exports.createLink = async (req, res) => {
 
     res.status(201).json(newLink);
   } catch (error) {
-    res.status(500).json({ error: 'Error al crear el link', details: error.message });
+    console.error('createLink error:', error);
+    res.status(500).json({ error: 'Error al crear el link' });
   }
 };
 
 // ========================================
-// OBTENER LINKS DE UNA PÁGINA
+// OBTENER LINKS DE UNA PÁGINA (privado: solo el dueño)
 // ========================================
 exports.getLinksByPage = async (req, res) => {
   const { pageId } = req.params;
-
+  const userId = req.user.userId;
 
   try {
-    // Verificar que la página pertenece al usuario
-    const page = await prisma.page.findFirst({
-      where: { id: parseInt(pageId) },
-    });
-    console.log(page);
-
-    console.log(page.user_id);
+    const page = await getOwnedPage(pageId, userId);
     if (!page) {
-      return res.status(403).json({ error: 'No se encontro la página' });
+      return res.status(404).json({ error: 'Página no encontrada' });
     }
 
     const links = await prisma.link.findMany({
-      where: { page_id: parseInt(pageId) },
+      where: { page_id: page.id },
       orderBy: { position: 'asc' },
     });
 
-    res.status(200).json({
-      links: links,
-      page: page
-    });
+    res.status(200).json({ links, page });
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener los links', details: error.message });
+    console.error('getLinksByPage error:', error);
+    res.status(500).json({ error: 'Error al obtener los links' });
   }
 };
 
@@ -80,10 +75,14 @@ exports.updateLink = async (req, res) => {
   const { title, url } = req.body;
   const userId = req.user.userId;
 
+  const linkId = parseInt(id, 10);
+  if (Number.isNaN(linkId)) {
+    return res.status(400).json({ error: 'ID inválido' });
+  }
+
   try {
-    // Verificar que el link pertenece a una página del usuario
     const link = await prisma.link.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: linkId },
       include: { page: true },
     });
 
@@ -91,14 +90,19 @@ exports.updateLink = async (req, res) => {
       return res.status(403).json({ error: 'No autorizado' });
     }
 
+    const data = {};
+    if (title !== undefined) data.title = title;
+    if (url !== undefined) data.url = url;
+
     const updatedLink = await prisma.link.update({
-      where: { id: parseInt(id) },
-      data: { title, url },
+      where: { id: linkId },
+      data,
     });
 
     res.status(200).json(updatedLink);
   } catch (error) {
-    res.status(500).json({ error: 'Error al actualizar el link', details: error.message });
+    console.error('updateLink error:', error);
+    res.status(500).json({ error: 'Error al actualizar el link' });
   }
 };
 
@@ -109,10 +113,14 @@ exports.deleteLink = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.userId;
 
+  const linkId = parseInt(id, 10);
+  if (Number.isNaN(linkId)) {
+    return res.status(400).json({ error: 'ID inválido' });
+  }
+
   try {
-    // Verificar que el link pertenece a una página del usuario
     const link = await prisma.link.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: linkId },
       include: { page: true },
     });
 
@@ -120,37 +128,35 @@ exports.deleteLink = async (req, res) => {
       return res.status(403).json({ error: 'No autorizado' });
     }
 
-    await prisma.link.delete({
-      where: { id: parseInt(id) },
-    });
+    await prisma.link.delete({ where: { id: linkId } });
 
     res.status(200).json({ message: 'Link eliminado exitosamente' });
   } catch (error) {
-    res.status(500).json({ error: 'Error al eliminar el link', details: error.message });
+    console.error('deleteLink error:', error);
+    res.status(500).json({ error: 'Error al eliminar el link' });
   }
 };
 
 // ========================================
 // REORDENAR LINKS (Drag & Drop)
+// Verifica ownership de TODOS los links del payload
 // ========================================
 exports.reorderLinks = async (req, res) => {
   const { links } = req.body; // Array de {id, position}
   const userId = req.user.userId;
 
   try {
-    // Verificar que el primer link pertenece al usuario
-    if (links.length > 0) {
-      const firstLink = await prisma.link.findUnique({
-        where: { id: links[0].id },
-        include: { page: true },
-      });
+    const ids = links.map((l) => l.id);
 
-      if (!firstLink || firstLink.page.user_id !== userId) {
-        return res.status(403).json({ error: 'No autorizado' });
-      }
+    const dbLinks = await prisma.link.findMany({
+      where: { id: { in: ids } },
+      include: { page: { select: { user_id: true } } },
+    });
+
+    if (dbLinks.length !== ids.length || dbLinks.some((l) => l.page.user_id !== userId)) {
+      return res.status(403).json({ error: 'No autorizado' });
     }
 
-    // Actualizar todas las posiciones en una transacción
     await prisma.$transaction(
       links.map((link) =>
         prisma.link.update({
@@ -162,7 +168,8 @@ exports.reorderLinks = async (req, res) => {
 
     res.status(200).json({ message: 'Links reordenados exitosamente' });
   } catch (error) {
-    res.status(500).json({ error: 'Error al reordenar links', details: error.message });
+    console.error('reorderLinks error:', error);
+    res.status(500).json({ error: 'Error al reordenar links' });
   }
 };
 
@@ -172,45 +179,24 @@ exports.reorderLinks = async (req, res) => {
 exports.trackClick = async (req, res) => {
   const { id } = req.params;
 
+  const linkId = parseInt(id, 10);
+  if (Number.isNaN(linkId)) {
+    return res.status(400).json({ error: 'ID inválido' });
+  }
+
   try {
     await prisma.link.update({
-      where: { id: parseInt(id) },
+      where: { id: linkId },
       data: { clicks: { increment: 1 } },
     });
 
     res.status(200).json({ message: 'Click registrado' });
   } catch (error) {
-    res.status(500).json({ error: 'Error al registrar click' });
-  }
-};
-
-
-exports.getLinksByPageName = async (req, res) => {
-  const { pageName } = req.params;
-
-
-  try {
-    // Verificar que la página pertenece al usuario
-    const page = await prisma.page.findFirst({
-      where: { title: pageName },
-    });
-    console.log(page);
-
-    console.log(page.user_id);
-    if (!page) {
-      return res.status(403).json({ error: 'No se encontro la página' });
+    // P2025 = registro no encontrado
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Link no encontrado' });
     }
-
-    const links = await prisma.link.findMany({
-      where: { page_id: page.id },
-      orderBy: { position: 'asc' },
-    });
-
-    res.status(200).json({
-      links: links,
-      page: page
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener los links', details: error.message });
+    console.error('trackClick error:', error);
+    res.status(500).json({ error: 'Error al registrar click' });
   }
 };

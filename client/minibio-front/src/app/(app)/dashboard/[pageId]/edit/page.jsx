@@ -7,24 +7,44 @@ import Link from 'next/link';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
 import Input from '@/components/Input';
+import { THEMES, DEFAULT_THEME } from '@/lib/themes';
+
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar';
 
 export default function EditPage(props) {
   const { pageId } = use(props.params);
   const { user, token, loading } = useAuth();
   const router = useRouter();
 
+  const [page, setPage] = useState(null);
   const [links, setLinks] = useState([]);
-  const [page, setPage] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
 
+  // Links
   const [newLinkTitle, setNewLinkTitle] = useState('');
   const [newLinkUrl, setNewLinkUrl] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [editUrl, setEditUrl] = useState('');
   const [draggedIndex, setDraggedIndex] = useState(null);
+
+  // Página
+  const [pageTitle, setPageTitle] = useState('');
+  const [pageBio, setPageBio] = useState('');
+  const [pageSlug, setPageSlug] = useState('');
+  const [pageTheme, setPageTheme] = useState(DEFAULT_THEME);
+  const [savingPage, setSavingPage] = useState(false);
+
+  // Menú
+  const [menuName, setMenuName] = useState('');
+  const [menuDescription, setMenuDescription] = useState('');
+  const [menuPrice, setMenuPrice] = useState('');
+  const [menuImage, setMenuImage] = useState('');
+  const [showMenuForm, setShowMenuForm] = useState(false);
+
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -32,13 +52,18 @@ export default function EditPage(props) {
     }
   }, [user, loading, router]);
 
-  const fetchLinks = async () => {
+  const fetchPage = async () => {
     if (!token) return;
     setIsLoading(true);
     try {
-      const data = await apiFetch(`/links/page/${pageId}`, token);
-      setLinks(data.links);
-      setPage(data.page);
+      const data = await apiFetch(`/pages/${pageId}`, token);
+      setPage(data);
+      setLinks(data.links || []);
+      setMenuItems(data.menus || []);
+      setPageTitle(data.title || '');
+      setPageBio(data.bio || '');
+      setPageSlug(data.slug || '');
+      setPageTheme(data.theme?.preset || DEFAULT_THEME);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -47,7 +72,7 @@ export default function EditPage(props) {
   };
 
   useEffect(() => {
-    fetchLinks();
+    fetchPage();
   }, [token, pageId]);
 
   const showSuccess = (message) => {
@@ -55,14 +80,52 @@ export default function EditPage(props) {
     setTimeout(() => setSuccess(''), 3000);
   };
 
+  const publicUrl = page ? `https://${page.slug}.${ROOT_DOMAIN}` : '';
+
+  // ========================================
+  // Página: guardar configuración
+  // ========================================
+  const handleSavePage = async () => {
+    if (!pageTitle.trim()) {
+      setError('El título no puede estar vacío');
+      return;
+    }
+    setError('');
+    setSavingPage(true);
+    try {
+      const updated = await apiFetch(`/pages/${pageId}`, token, {
+        method: 'PUT',
+        body: {
+          title: pageTitle,
+          bio: pageBio,
+          slug: pageSlug || undefined,
+          theme: { preset: pageTheme },
+        },
+      });
+      setPage({ ...page, ...updated });
+      setPageSlug(updated.slug);
+      showSuccess('Página guardada');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingPage(false);
+    }
+  };
+
+  const copyPublicLink = () => {
+    navigator.clipboard.writeText(publicUrl);
+    showSuccess('¡Link copiado!');
+  };
+
+  // ========================================
+  // Links
+  // ========================================
   const handleAddLink = async () => {
     if (!newLinkTitle.trim() || !newLinkUrl.trim()) {
       setError('Por favor completa todos los campos');
       return;
     }
-
     setError('');
-
     try {
       const newLink = await apiFetch('/links', token, {
         method: 'POST',
@@ -72,7 +135,6 @@ export default function EditPage(props) {
           url: newLinkUrl,
         },
       });
-
       setLinks([...links, newLink]);
       setNewLinkTitle('');
       setNewLinkUrl('');
@@ -84,13 +146,9 @@ export default function EditPage(props) {
 
   const handleDeleteLink = async (linkId) => {
     if (!confirm('¿Estás seguro de eliminar este link?')) return;
-
     try {
-      await apiFetch(`/links/${linkId}`, token, {
-        method: 'DELETE',
-      });
-
-      setLinks(links.filter(link => link.id !== linkId));
+      await apiFetch(`/links/${linkId}`, token, { method: 'DELETE' });
+      setLinks(links.filter((link) => link.id !== linkId));
       showSuccess('Link eliminado');
     } catch (err) {
       setError(err.message);
@@ -113,16 +171,9 @@ export default function EditPage(props) {
     try {
       const updatedLink = await apiFetch(`/links/${linkId}`, token, {
         method: 'PUT',
-        body: {
-          title: editTitle,
-          url: editUrl,
-        },
+        body: { title: editTitle, url: editUrl },
       });
-
-      setLinks(links.map(link =>
-        link.id === linkId ? updatedLink : link
-      ));
-
+      setLinks(links.map((link) => (link.id === linkId ? updatedLink : link)));
       setEditingId(null);
       showSuccess('Guardado');
     } catch (err) {
@@ -130,38 +181,26 @@ export default function EditPage(props) {
     }
   };
 
-  const copyPublicLink = () => {
-    const publicUrl = `${page?.title}.minibio.ar`;
-    navigator.clipboard.writeText(publicUrl);
-    showSuccess('¡Link copiado!');
-  };
-
-  // Drag & Drop handlers
-  const handleDragStart = (index) => {
-    setDraggedIndex(index);
-  };
+  // Drag & Drop
+  const handleDragStart = (index) => setDraggedIndex(index);
 
   const handleDragOver = (e, index) => {
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === index) return;
-
     const newLinks = [...links];
     const draggedItem = newLinks[draggedIndex];
     newLinks.splice(draggedIndex, 1);
     newLinks.splice(index, 0, draggedItem);
-
     setLinks(newLinks);
     setDraggedIndex(index);
   };
 
   const handleDragEnd = async () => {
     if (draggedIndex === null) return;
-
     const reorderedLinks = links.map((link, index) => ({
       id: link.id,
       position: index,
     }));
-
     try {
       await apiFetch('/links/reorder', token, {
         method: 'PATCH',
@@ -170,10 +209,73 @@ export default function EditPage(props) {
       showSuccess('Guardado');
     } catch (err) {
       setError('Error al reordenar');
-      fetchLinks();
+      fetchPage();
     }
-
     setDraggedIndex(null);
+  };
+
+  // ========================================
+  // Menú
+  // ========================================
+  const handleAddMenuItem = async () => {
+    if (!menuName.trim()) {
+      setError('El producto necesita un nombre');
+      return;
+    }
+    setError('');
+    try {
+      const item = await apiFetch('/menus', token, {
+        method: 'POST',
+        body: {
+          page_id: parseInt(pageId),
+          product_name: menuName,
+          product_description: menuDescription || null,
+          price: menuPrice === '' ? null : parseFloat(menuPrice),
+          image: menuImage || null,
+        },
+      });
+      setMenuItems([...menuItems, item]);
+      setMenuName('');
+      setMenuDescription('');
+      setMenuPrice('');
+      setMenuImage('');
+      setShowMenuForm(false);
+      showSuccess('Producto agregado al menú');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleToggleMenuItem = async (item) => {
+    try {
+      const updated = await apiFetch(`/menus/${item.id}`, token, {
+        method: 'PUT',
+        body: { status: item.status === 'active' ? 'inactive' : 'active' },
+      });
+      setMenuItems(menuItems.map((m) => (m.id === item.id ? updated : m)));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleDeleteMenuItem = async (itemId) => {
+    if (!confirm('¿Eliminar este producto del menú?')) return;
+    try {
+      await apiFetch(`/menus/${itemId}`, token, { method: 'DELETE' });
+      setMenuItems(menuItems.filter((m) => m.id !== itemId));
+      showSuccess('Producto eliminado');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const formatPrice = (price) => {
+    if (price === null || price === undefined) return null;
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      maximumFractionDigits: 0,
+    }).format(Number(price));
   };
 
   if (loading || isLoading) {
@@ -198,27 +300,37 @@ export default function EditPage(props) {
               </svg>
               Dashboard
             </Link>
-            <Button
-              onClick={copyPublicLink}
-              variant="glass"
-              size="small"
-              icon={
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-              }
-            >
-              Copiar Link
-            </Button>
+            <div className="flex items-center gap-2">
+              <a
+                href={publicUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-xl transition-colors font-medium"
+              >
+                Ver página
+              </a>
+              <Button
+                onClick={copyPublicLink}
+                variant="glass"
+                size="small"
+                icon={
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                }
+              >
+                Copiar Link
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto p-4 md:p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Editor de Links</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Editor de página</h1>
           <p className="text-gray-600">
-            <span className="font-semibold text-blue-600">{page?.title}</span>.minibio.ar
+            <span className="font-semibold text-blue-600">{page?.slug}</span>.{ROOT_DOMAIN}
           </p>
         </div>
 
@@ -241,10 +353,71 @@ export default function EditPage(props) {
           </div>
         )}
 
+        {/* Configuración de la página */}
+        <Card variant="glass" padding="large" className="mb-8 p-5">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Configuración de la página</h2>
+          <div className="text-gray-700 space-y-4">
+            <Input
+              value={pageTitle}
+              onChange={(e) => setPageTitle(e.target.value)}
+              placeholder="Mi Negocio"
+              label="Título"
+            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Bio / descripción</label>
+              <textarea
+                value={pageBio}
+                onChange={(e) => setPageBio(e.target.value)}
+                placeholder="Contale al mundo de qué se trata tu página"
+                rows={2}
+                maxLength={300}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">URL pública (slug)</label>
+              <div className="flex items-center gap-2">
+                <input
+                  value={pageSlug}
+                  onChange={(e) => setPageSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                  placeholder="mi-negocio"
+                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <span className="text-gray-500 text-sm whitespace-nowrap">.{ROOT_DOMAIN}</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tema</label>
+              <div className="flex gap-3 flex-wrap">
+                {Object.entries(THEMES).map(([key, t]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setPageTheme(key)}
+                    className={`flex flex-col items-center gap-1 focus:outline-none`}
+                    title={t.name}
+                  >
+                    <span
+                      className={`w-12 h-12 rounded-full border-4 transition-all ${
+                        pageTheme === key ? 'border-blue-600 scale-110' : 'border-white'
+                      }`}
+                      style={{ background: t.swatch }}
+                    ></span>
+                    <span className="text-xs text-gray-600">{t.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Button onClick={handleSavePage} variant="primary" fullWidth loading={savingPage}>
+              Guardar cambios
+            </Button>
+          </div>
+        </Card>
+
         {/* Formulario Agregar Link */}
         <Card variant="glass" padding="large" className="mb-8 p-5">
-          <h2 className=" text-xl font-bold text-gray-900 mb-4">Añadir Nuevo Link</h2>
-          <div className="  text-gray-500 space-y-4">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Añadir Nuevo Link</h2>
+          <div className="text-gray-500 space-y-4">
             <Input
               value={newLinkTitle}
               onChange={(e) => setNewLinkTitle(e.target.value)}
@@ -266,34 +439,26 @@ export default function EditPage(props) {
 
         {/* Lista de Links */}
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Links ({links.length})
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900">Links ({links.length})</h2>
           {links.length > 0 && (
-            <p className="text-sm text-gray-500">
-              Arrastra para ordenar a gusto.
-            </p>
+            <p className="text-sm text-gray-500">Arrastra para ordenar a gusto.</p>
           )}
         </div>
 
         {links.length === 0 ? (
-          <Card variant="elevated" padding="large">
+          <Card variant="elevated" padding="large" className="mb-8">
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Nada por acá.
-              </h3>
-              <p className="text-gray-600">
-                ¡Agregá tu primer link arriba!
-              </p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Nada por acá.</h3>
+              <p className="text-gray-600">¡Agregá tu primer link arriba!</p>
             </div>
           </Card>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 mb-8">
             {links.map((link, index) => (
               <Card
                 key={link.id}
@@ -309,7 +474,7 @@ export default function EditPage(props) {
                   className="p-5 cursor-move"
                 >
                   {editingId === link.id ? (
-                    <div className="space-y-3  text-gray-500">
+                    <div className="space-y-3 text-gray-500">
                       <Input
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
@@ -340,9 +505,7 @@ export default function EditPage(props) {
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-semibold text-gray-900 truncate">{link.title}</h3>
                         <p className="text-sm text-gray-500 truncate">{link.url}</p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {link.clicks} clicks
-                        </p>
+                        <p className="text-xs text-gray-400 mt-1">{link.clicks} clicks</p>
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
                         <button
@@ -364,6 +527,115 @@ export default function EditPage(props) {
                       </div>
                     </div>
                   )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Menú digital */}
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">Menú digital ({menuItems.length})</h2>
+          {!showMenuForm && (
+            <Button onClick={() => setShowMenuForm(true)} variant="primary" size="small">
+              + Agregar producto
+            </Button>
+          )}
+        </div>
+
+        {showMenuForm && (
+          <Card variant="glass" padding="large" className="mb-6 p-5 animate-scale-in">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Nuevo producto</h3>
+            <div className="text-gray-700 space-y-4">
+              <Input
+                value={menuName}
+                onChange={(e) => setMenuName(e.target.value)}
+                placeholder="Café con leche"
+                label="Nombre"
+              />
+              <Input
+                value={menuDescription}
+                onChange={(e) => setMenuDescription(e.target.value)}
+                placeholder="Con leche de avena opcional"
+                label="Descripción (opcional)"
+              />
+              <Input
+                type="number"
+                value={menuPrice}
+                onChange={(e) => setMenuPrice(e.target.value)}
+                placeholder="2500"
+                label="Precio en ARS (opcional)"
+              />
+              <Input
+                type="url"
+                value={menuImage}
+                onChange={(e) => setMenuImage(e.target.value)}
+                placeholder="https://... (URL de imagen, opcional)"
+                label="Imagen (opcional)"
+              />
+              <div className="flex gap-3">
+                <Button onClick={handleAddMenuItem} variant="primary" fullWidth>
+                  Agregar
+                </Button>
+                <Button onClick={() => setShowMenuForm(false)} variant="secondary">
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {menuItems.length === 0 && !showMenuForm ? (
+          <Card variant="elevated" padding="large">
+            <div className="text-center py-8">
+              <p className="text-gray-600">
+                ¿Vendés productos o tenés un menú? Agregalos y se muestran en tu página pública.
+              </p>
+            </div>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {menuItems.map((item) => (
+              <Card key={item.id} variant="glass" padding="none">
+                <div className="p-5 flex items-center gap-4">
+                  {item.image && (
+                    <img
+                      src={item.image}
+                      alt={item.product_name || ''}
+                      className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`text-lg font-semibold truncate ${item.status === 'active' ? 'text-gray-900' : 'text-gray-400 line-through'}`}>
+                      {item.product_name}
+                    </h3>
+                    {item.product_description && (
+                      <p className="text-sm text-gray-500 truncate">{item.product_description}</p>
+                    )}
+                    {formatPrice(item.price) && (
+                      <p className="text-sm font-semibold text-gray-700 mt-1">{formatPrice(item.price)}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0 items-center">
+                    <button
+                      onClick={() => handleToggleMenuItem(item)}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                        item.status === 'active'
+                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      {item.status === 'active' ? 'Visible' : 'Oculto'}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteMenuItem(item.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </Card>
             ))}

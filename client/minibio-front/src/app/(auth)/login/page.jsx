@@ -23,13 +23,13 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    const success = await login(email, password);
-
-    if (!success) {
-      setError('Email o contraseña incorrectos');
+    try {
+      await login(email, password);
+    } catch (err) {
+      setError(err.message || 'Email o contraseña incorrectos');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleResendVerification = async () => {

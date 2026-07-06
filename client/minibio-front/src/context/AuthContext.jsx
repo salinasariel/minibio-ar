@@ -1,21 +1,21 @@
-"use client"; 
+"use client";
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const storedToken = localStorage.getItem('jwt_token');
     const storedUser = localStorage.getItem('user_data');
-    
+
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
@@ -23,32 +23,32 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
+  const saveSession = (data) => {
+    setToken(data.token);
+    setUser(data.user);
+    localStorage.setItem('jwt_token', data.token);
+    localStorage.setItem('user_data', JSON.stringify(data.user));
+  };
+
   const login = async (email, password) => {
-    try {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+    const data = await apiFetch('/auth/login', null, {
+      method: 'POST',
+      body: { email, password },
+    });
+    saveSession(data);
+    router.push('/dashboard');
+    return true;
+  };
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Error al iniciar sesión');
-      }
-
-      setToken(data.token);
-      setUser(data.user);
-      localStorage.setItem('jwt_token', data.token);
-      localStorage.setItem('user_data', JSON.stringify(data.user));
-      
-      router.push('/dashboard'); 
-      return true;
-
-    } catch (error) {
-      console.error(error);
-      return false;
-    }
+  // Registro con auto-login: la API devuelve token + user en el registro
+  const register = async ({ email, password, username, display_name }) => {
+    const data = await apiFetch('/auth/register', null, {
+      method: 'POST',
+      body: { email, password, username, display_name },
+    });
+    saveSession(data);
+    router.push('/dashboard');
+    return true;
   };
 
   const logout = () => {
@@ -64,6 +64,7 @@ export function AuthProvider({ children }) {
     token,
     loading,
     login,
+    register,
     logout,
   };
 

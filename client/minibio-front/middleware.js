@@ -68,46 +68,34 @@ export function middleware(request) {
 function getSubdomain(hostname) {
     console.log('   📍 Analizando hostname:', hostname);
 
-    // Desarrollo local
-    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-        // Para testing local: username.localhost:3000
-        const parts = hostname.split('.');
-        console.log('   📍 Partes (local):', parts);
-
-        if (parts.length >= 2 && parts[0] !== 'localhost') {
-            console.log('   📍 Subdomain (local):', parts[0]);
-            return parts[0];
-        }
+    // Desarrollo local usando localhost directo
+    if (hostname.includes('localhost') && !hostname.includes('.')) {
         return null;
     }
 
-    // Producción - minibio.ar
-    let domain = hostname;
-
-    // Remover puerto si existe
-    if (domain.includes(':')) {
-        domain = domain.split(':')[0];
+    // Si es localhost con subdominio (ej: app.localhost)
+    if (hostname.includes('localhost') && hostname.split('.').length > 1) {
+        const parts = hostname.split('.');
+        if (parts[0] !== 'localhost') return parts[0];
     }
 
-    console.log('   📍 Domain limpio:', domain);
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar';
+    const domain = hostname.split(':')[0]; // Remover puerto si existe
 
-    // Casos de dominio principal
-    if (domain === 'minibio.ar' || domain === 'www.minibio.ar') {
+    console.log('   📍 Domain limpio:', domain);
+    console.log('   📍 Root Domain config:', rootDomain);
+
+    // Si es el dominio raíz (ej: minibio.local o www.minibio.local)
+    if (domain === rootDomain || domain === `www.${rootDomain}`) {
         console.log('   📍 Es dominio principal');
         return null;
     }
 
     // Extraer subdominio
-    // Ej: app.minibio.ar → app
-    // Ej: juan.minibio.ar → juan
-    const withoutDomain = domain.replace('.minibio.ar', '');
-
-    console.log('   📍 Sin dominio base:', withoutDomain);
-
-    // Si después de remover .minibio.ar queda algo, es el subdominio
-    if (withoutDomain !== domain && withoutDomain.length > 0) {
-        console.log('   📍 Subdomain final:', withoutDomain);
-        return withoutDomain;
+    if (domain.endsWith(`.${rootDomain}`)) {
+        const subdomain = domain.replace(`.${rootDomain}`, '');
+        console.log('   📍 Subdomain final:', subdomain);
+        return subdomain;
     }
 
     return null;

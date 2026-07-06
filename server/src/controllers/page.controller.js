@@ -1,48 +1,33 @@
 const prisma = require('../models/db');
-
-// ========================================
-// OBTENER TODAS LAS PÁGINAS (Admin - opcional)
-// ========================================
-exports.getAllPages = async (req, res) => {
-  try {
-    const pages = await prisma.page.findMany({
-      include: { 
-        links: true, 
-        menus: true, 
-        user: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-          },
-        },
-      },
-    });
-    res.status(200).json(pages);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener las páginas' });
-  }
-};
+const { uniqueSlug } = require('../lib/slug');
 
 // ========================================
 // CREAR NUEVA PÁGINA
 // ========================================
 exports.createPage = async (req, res) => {
-  const { title, bio, theme } = req.body;
+  const { title, bio, theme, slug } = req.body;
   const userId = req.user.userId;
 
   try {
+    const finalSlug = await uniqueSlug(slug || title);
+
     const newPage = await prisma.page.create({
       data: {
         title,
+        slug: finalSlug,
         bio: bio || '',
         theme: theme || null,
         user_id: userId,
       },
+      include: { links: true },
     });
     res.status(201).json(newPage);
   } catch (error) {
-    res.status(500).json({ error: 'Error al crear la página', details: error.message });
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'Ese slug ya está en uso' });
+    }
+    console.error('createPage error:', error);
+    res.status(500).json({ error: 'Error al crear la página' });
   }
 };
 
@@ -54,45 +39,38 @@ exports.getMyPages = async (req, res) => {
 
   try {
     const pages = await prisma.page.findMany({
-      where: {
-        user_id: userId,
-      },
+      where: { user_id: userId },
       include: {
-        links: {
-          orderBy: { position: 'asc' },
-        },
+        links: { orderBy: { position: 'asc' } },
       },
-      orderBy: {
-        created_at: 'desc',
-      },
+      orderBy: { created_at: 'desc' },
     });
 
     res.status(200).json(pages);
   } catch (error) {
-    res.status(500).json({ 
-      error: 'Error al obtener las páginas', 
-      details: error.message 
-    });
+    console.error('getMyPages error:', error);
+    res.status(500).json({ error: 'Error al obtener las páginas' });
   }
 };
 
 // ========================================
-// OBTENER UNA PÁGINA ESPECÍFICA (Del usuario autenticado)
+// OBTENER UNA PÁGINA ESPECÍFICA (del usuario autenticado)
 // ========================================
 exports.getPageById = async (req, res) => {
   const { pageId } = req.params;
   const userId = req.user.userId;
 
+  const id = parseInt(pageId, 10);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: 'ID de página inválido' });
+  }
+
   try {
     const page = await prisma.page.findFirst({
-      where: {
-        id: parseInt(pageId),
-        user_id: userId,
-      },
+      where: { id, user_id: userId },
       include: {
-        links: {
-          orderBy: { position: 'asc' },
-        },
+        links: { orderBy: { position: 'asc' } },
+        menus: { orderBy: { created_at: 'asc' } },
       },
     });
 
@@ -102,10 +80,8 @@ exports.getPageById = async (req, res) => {
 
     res.status(200).json(page);
   } catch (error) {
-    res.status(500).json({ 
-      error: 'Error al obtener la página', 
-      details: error.message 
-    });
+    console.error('getPageById error:', error);
+    res.status(500).json({ error: 'Error al obtener la página' });
   }
 };
 
@@ -114,33 +90,43 @@ exports.getPageById = async (req, res) => {
 // ========================================
 exports.updatePage = async (req, res) => {
   const { pageId } = req.params;
-  const { title, bio, theme } = req.body;
+  const { title, bio, theme, slug } = req.body;
   const userId = req.user.userId;
 
+  const id = parseInt(pageId, 10);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: 'ID de página inválido' });
+  }
+
   try {
-    // Verificar propiedad
     const page = await prisma.page.findFirst({
-      where: {
-        id: parseInt(pageId),
-        user_id: userId,
-      },
+      where: { id, user_id: userId },
     });
 
     if (!page) {
       return res.status(404).json({ error: 'Página no encontrada' });
     }
 
+    const data = {};
+    if (title !== undefined) data.title = title;
+    if (bio !== undefined) data.bio = bio;
+    if (theme !== undefined) data.theme = theme;
+    if (slug !== undefined && slug !== page.slug) {
+      data.slug = await uniqueSlug(slug, page.id);
+    }
+
     const updatedPage = await prisma.page.update({
-      where: { id: parseInt(pageId) },
-      data: { title, bio, theme },
+      where: { id },
+      data,
     });
 
     res.status(200).json(updatedPage);
   } catch (error) {
-    res.status(500).json({ 
-      error: 'Error al actualizar la página', 
-      details: error.message 
-    });
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'Ese slug ya está en uso' });
+    }
+    console.error('updatePage error:', error);
+    res.status(500).json({ error: 'Error al actualizar la página' });
   }
 };
 
@@ -151,28 +137,25 @@ exports.deletePage = async (req, res) => {
   const { pageId } = req.params;
   const userId = req.user.userId;
 
+  const id = parseInt(pageId, 10);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: 'ID de página inválido' });
+  }
+
   try {
-    // Verificar propiedad
     const page = await prisma.page.findFirst({
-      where: {
-        id: parseInt(pageId),
-        user_id: userId,
-      },
+      where: { id, user_id: userId },
     });
 
     if (!page) {
       return res.status(404).json({ error: 'Página no encontrada' });
     }
 
-    await prisma.page.delete({
-      where: { id: parseInt(pageId) },
-    });
+    await prisma.page.delete({ where: { id } });
 
     res.status(200).json({ message: 'Página eliminada exitosamente' });
   } catch (error) {
-    res.status(500).json({ 
-      error: 'Error al eliminar la página', 
-      details: error.message 
-    });
+    console.error('deletePage error:', error);
+    res.status(500).json({ error: 'Error al eliminar la página' });
   }
 };

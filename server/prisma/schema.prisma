@@ -1,7 +1,8 @@
 // prisma/schema.prisma
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
 }
 
 datasource db {
@@ -21,6 +22,7 @@ model User {
   token_expires  DateTime?
   created_at    DateTime @default(now())
   pages         Page[]
+  password_resets PasswordReset[]
 
   @@map("users") // Mapea este modelo a la tabla 'users'
 }
@@ -30,6 +32,7 @@ model Page {
   user_id    Int
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   title      String?
+  slug       String   @unique
   bio        String?
   theme      Json?
   created_at DateTime @default(now())
@@ -70,8 +73,8 @@ model Order {
 
 model Menu {
   id                  Int       @id @default(autoincrement())
-  page_id             Int?
-  page                Page?     @relation(fields: [page_id], references: [id], onDelete: SetNull)
+  page_id             Int
+  page                Page      @relation(fields: [page_id], references: [id], onDelete: Cascade)
   product_name        String?
   product_description String?
   image               String?
