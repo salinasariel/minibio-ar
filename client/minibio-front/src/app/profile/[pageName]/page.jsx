@@ -14,6 +14,49 @@ export default function PublicProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lightbox, setLightbox] = useState(null); // { src, alt } | null
+  const [qrDataUrl, setQrDataUrl] = useState(null); // data-URL del QR (modal abierto si != null)
+  const [shareMsg, setShareMsg] = useState('');
+
+  const pageUrl = () => (typeof window !== 'undefined' ? window.location.href : '');
+
+  const handleShowQr = async () => {
+    try {
+      const QRCode = (await import('qrcode')).default;
+      const dataUrl = await QRCode.toDataURL(pageUrl(), {
+        width: 320,
+        margin: 2,
+        color: { dark: '#111827', light: '#ffffff' },
+      });
+      setQrDataUrl(dataUrl);
+    } catch (err) {
+      console.error('QR error:', err);
+    }
+  };
+
+  const handleShare = async () => {
+    const url = pageUrl();
+    const title = displayName ? `${displayName} en MiniBio` : 'Mi MiniBio';
+    const text = `Mirá ${displayName || 'este MiniBio'}: ${url}`;
+
+    // Share nativo (móvil): abre WhatsApp, Instagram, etc.
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch {
+        // usuario canceló → no hacer nada
+        return;
+      }
+    }
+
+    // Desktop sin Web Share: copiar link + abrir WhatsApp Web
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareMsg('¡Link copiado!');
+      setTimeout(() => setShareMsg(''), 2500);
+    } catch {}
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  };
 
   useEffect(() => {
     if (!pageName) return;
@@ -223,6 +266,41 @@ export default function PublicProfilePage() {
           </div>
         )}
 
+        {/* QR y Compartir */}
+        <div className="flex items-center justify-center gap-4 mb-8">
+          <button
+            type="button"
+            onClick={handleShowQr}
+            title="Ver código QR"
+            className="w-14 h-14 bg-white/20 backdrop-blur-md border-2 border-white/30 rounded-2xl flex items-center justify-center text-white hover:bg-white/30 hover:scale-110 transition-all"
+          >
+            {/* Icono QR */}
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <path d="M14 14h3v3h-3zM20 14h1v1h-1zM14 20h1v1h-1zM18 18h3v3h-3z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            title="Compartir"
+            className="w-14 h-14 bg-white/20 backdrop-blur-md border-2 border-white/30 rounded-2xl flex items-center justify-center text-white hover:bg-white/30 hover:scale-110 transition-all"
+          >
+            {/* Icono compartir */}
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342a3 3 0 100-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684zm0-12a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684z" />
+            </svg>
+          </button>
+        </div>
+
+        {shareMsg && (
+          <p className="text-center text-white/90 text-sm font-medium mb-4 animate-fade-in">
+            {shareMsg}
+          </p>
+        )}
+
         {/* Footer */}
         <div className="text-center">
           <a
@@ -239,6 +317,41 @@ export default function PublicProfilePage() {
           </a>
         </div>
       </div>
+
+      {/* Modal QR */}
+      {qrDataUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setQrDataUrl(null)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 flex flex-col items-center gap-4 shadow-2xl max-w-xs w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-gray-900 text-center">{displayName}</h3>
+            <img src={qrDataUrl} alt={`QR de ${displayName}`} className="w-64 h-64 rounded-xl" />
+            <p className="text-xs text-gray-500 text-center">
+              Escaneá el código para abrir este MiniBio
+            </p>
+            <div className="flex gap-2 w-full">
+              <a
+                href={qrDataUrl}
+                download={`minibio-${profile?.slug || 'qr'}.png`}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold text-center hover:bg-blue-700 transition-colors"
+              >
+                Descargar
+              </a>
+              <button
+                type="button"
+                onClick={() => setQrDataUrl(null)}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Lightbox: foto ampliada */}
       {lightbox && (
