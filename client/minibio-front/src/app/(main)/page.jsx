@@ -1,209 +1,228 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { Sparkles, ArrowRight, CheckCircle, Globe, Share2, QrCode, BarChart3, UtensilsCrossed, Palette, Mail } from 'lucide-react';
+import { ArrowRight, CheckCircle, Globe, Share2, QrCode, BarChart3, UtensilsCrossed, Mail } from 'lucide-react';
+
+const features = [
+  { icon: Globe, title: 'Tu página con tu nombre', desc: 'tunegocio.minibio.ar con todos tus links en un solo lugar' },
+  { icon: UtensilsCrossed, title: 'Menú con fotos y precios', desc: 'Cargá tus productos o tu carta' },
+  { icon: BarChart3, title: 'Estadísticas', desc: 'Visitas, clicks por link y actividad de los últimos días' },
+];
+
+const benefits = [
+  'Tu dirección propia: elegís el nombre de tu página',
+  'Menú o catálogo con fotos, precios y descripciones',
+  'Foto de perfil y colores a tu gusto',
+  'Código QR listo para imprimir y botón de compartir',
+  'Estadísticas de visitas y clicks de todas tus páginas',
+];
 
 export default function MiniBioLanding() {
-  const [scrollY, setScrollY] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(true);
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const features = [
-    { icon: Globe, title: 'Tu página con tu nombre', desc: 'tunegocio.minibio.ar con todos tus links en un solo lugar' },
-    { icon: UtensilsCrossed, title: 'Menú con fotos y precios', desc: 'Cargá tus productos o tu carta' },
-    { icon: BarChart3, title: 'Estadísticas', desc: 'Visitas, clicks por link y actividad de los últimos días' }
-  ];
-
-  const benefits = [
-    'Tu dirección propia: elegís el nombre de tu página',
-    'Menú o catálogo con fotos, precios y descripciones',
-    'Foto de perfil y colores a tu gusto',
-    'Código QR listo para imprimir y botón de compartir',
-    'Estadísticas de visitas y clicks de todas tus páginas',
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 text-white overflow-hidden">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
-          style={{ top: '10%', left: '10%', transform: `translateY(${scrollY * 0.3}px)` }}
-        />
-        <div
-          className="absolute w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
-          style={{ top: '60%', right: '10%', animationDelay: '1s', transform: `translateY(${scrollY * 0.2}px)` }}
-        />
-      </div>
-
-      {/* Hero Section */}
-      <div className="relative">
-        <nav className="container mx-auto px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div className={`flex items-center gap-2 text-2xl font-bold transition-all duration-700 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
-              <Sparkles className="text-yellow-400" />
-              <span className="bg-gradient-to-r from-yellow-400 to-pink-400 bg-clip-text text-transparent">
-                MiniBio.ar
-              </span>
-            </div>
+    <div className="min-h-screen bg-[#fafaf8] text-gray-900 antialiased">
+      {/* Nav */}
+      <nav className="border-b border-gray-200/70 bg-[#fafaf8]/90 backdrop-blur sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <span className="text-lg font-bold tracking-tight">
+            minibio<span className="text-indigo-600">.ar</span>
+          </span>
+          <div className="flex items-center gap-3">
             <a
               href="https://app.minibio.ar/login"
-              className={`px-6 py-2 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-all duration-300 hover:scale-105 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
             >
               Iniciar Sesión
             </a>
+            <a
+              href="https://app.minibio.ar/register"
+              className="px-4 py-2 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Crear mi página
+            </a>
           </div>
-        </nav>
+        </div>
+      </nav>
 
-        <div className="container mx-auto px-6 py-20">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className={`transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
-                Todos tus links
-                <span className="block bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                  en una sola página
-                </span>
-              </h1>
-              <p className="text-xl md:text-2xl text-purple-200 mb-6 max-w-2xl mx-auto">
-                Armá tu página con tus links, tu menú o catálogo, y compartila con un link o un QR. Pensado para emprendedores y negocios.
-              </p>
-
-              {/* Aviso gratuito */}
-              <div className="inline-flex items-center gap-2 px-5 py-2 mb-10 bg-green-500/20 border border-green-400/40 rounded-full text-green-300 text-sm font-medium">
-                <CheckCircle className="w-4 h-4" />
-                100% gratuito mientras está en desarrollo
-              </div>
-
-              <div>
-                <a
-                  href="https://app.minibio.ar/register"
-                  className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full text-lg font-semibold text-gray-900 hover:scale-105 transform transition-all duration-300 shadow-2xl hover:shadow-pink-500/50"
-                >
-                  Crear mi página
-                  <ArrowRight className="animate-pulse" />
-                </a>
-              </div>
+      {/* Hero */}
+      <header className="max-w-6xl mx-auto px-6 pt-16 pb-20 md:pt-24 md:pb-28">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <p className="inline-flex items-center gap-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1 mb-6">
+              <CheckCircle className="w-4 h-4" />
+              100% gratuito mientras está en desarrollo
+            </p>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] mb-6">
+              Todos tus links
+              <br />
+              <span className="text-indigo-600">en una sola página</span>
+            </h1>
+            <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-8 max-w-md">
+              Armá tu página con tus links, tu menú o catálogo, y compartila con un link o un QR. Pensado para emprendedores y negocios.
+            </p>
+            <div className="flex items-center gap-4">
+              <a
+                href="https://app.minibio.ar/register"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
+              >
+                Crear mi página
+                <ArrowRight className="w-4 h-4" />
+              </a>
+              <a
+                href="https://app.minibio.ar/login"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 underline underline-offset-4 transition-colors"
+              >
+                Ya tengo cuenta
+              </a>
             </div>
+          </div>
 
-            {/* Floating Cards */}
-            <div className="mt-20 relative">
-              <div className={`grid md:grid-cols-3 gap-6 transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-                {features.map((feature, i) => (
+          {/* Mockup de teléfono */}
+          <div className="hidden md:flex justify-center">
+            <div className="w-[290px] rounded-[2.4rem] border-[10px] border-gray-900 bg-gray-900 shadow-xl rotate-2">
+              <div className="rounded-[1.8rem] overflow-hidden bg-gradient-to-b from-indigo-500 to-violet-600 px-5 pt-10 pb-8">
+                <div className="w-16 h-16 mx-auto rounded-full bg-white/25 border-2 border-white/50 flex items-center justify-center text-2xl font-bold text-white mb-3">
+                  L
+                </div>
+                <p className="text-center text-white font-bold mb-1">Lo de Lucas</p>
+                <p className="text-center text-white/80 text-xs mb-5">Café de especialidad · Palermo</p>
+                {['Nuestra carta', 'Pedinos por WhatsApp', 'Instagram'].map((t) => (
                   <div
-                    key={i}
-                    className="group p-6 bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105 hover:-translate-y-2"
-                    style={{ animationDelay: `${i * 100}ms` }}
+                    key={t}
+                    className="bg-white/20 border border-white/30 rounded-xl text-center text-white text-sm font-medium py-3 mb-2.5"
                   >
-                    <feature.icon className="w-12 h-12 mb-4 text-yellow-400 group-hover:scale-110 transition-transform duration-300" />
-                    <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                    <p className="text-purple-200">{feature.desc}</p>
+                    {t}
                   </div>
                 ))}
+                <div className="flex justify-center gap-3 mt-5">
+                  <div className="w-9 h-9 bg-white/20 border border-white/30 rounded-lg flex items-center justify-center">
+                    <QrCode className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="w-9 h-9 bg-white/20 border border-white/30 rounded-lg flex items-center justify-center">
+                    <Share2 className="w-4 h-4 text-white" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Features Section */}
-      <div className="relative py-20 bg-black/20">
-        <div className="container mx-auto px-6">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Qué podés hacer
-                <span className="block text-yellow-400">con MiniBio</span>
-              </h2>
-              <p className="text-xl text-purple-200">
-                Sin vueltas: lo que ves es lo que hay, y actualizamos seguido
-              </p>
+      {/* Features */}
+      <section className="border-y border-gray-200/70 bg-white">
+        <div className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-3 gap-10">
+          {features.map((f) => (
+            <div key={f.title}>
+              <f.icon className="w-6 h-6 text-indigo-600 mb-3" strokeWidth={1.8} />
+              <h3 className="font-semibold text-lg mb-1">{f.title}</h3>
+              <p className="text-gray-600 leading-relaxed">{f.desc}</p>
             </div>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              {benefits.map((benefit, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-4 p-6 bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-x-2"
-                >
-                  <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" />
-                  <span className="text-lg">{benefit}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
-      </div>
+      </section>
 
-      {/* QR + Share highlight */}
-      <div className="relative py-20">
-        <div className="container mx-auto px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="flex items-center justify-center gap-6 mb-6">
-              <QrCode className="w-14 h-14 text-yellow-400" />
-              <Share2 className="w-14 h-14 text-pink-400" />
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+      {/* Qué podés hacer */}
+      <section className="max-w-6xl mx-auto px-6 py-20 md:py-24">
+        <div className="grid md:grid-cols-[1fr_1.4fr] gap-12">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+              Qué podés hacer con MiniBio
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Sin vueltas: lo que ves es lo que hay, y actualizamos seguido.
+            </p>
+          </div>
+          <ol className="space-y-0 divide-y divide-gray-200/70">
+            {benefits.map((b, i) => (
+              <li key={b} className="flex items-baseline gap-4 py-4">
+                <span className="text-sm font-mono text-indigo-600 tabular-nums">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span className="text-gray-800 text-lg">{b}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* QR + compartir */}
+      <section className="border-y border-gray-200/70 bg-gray-900 text-white">
+        <div className="max-w-6xl mx-auto px-6 py-20 md:py-24 grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
               Compartila como quieras
             </h2>
-            <p className="text-xl text-purple-200 mb-10 max-w-2xl mx-auto">
+            <p className="text-gray-300 text-lg leading-relaxed mb-8">
               Cada página tiene su código QR para descargar e imprimir, y un botón de compartir. Ideal para la mesa del local o la bio de Instagram.
             </p>
             <a
               href="https://app.minibio.ar/register"
-              className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full text-xl font-semibold text-gray-900 hover:scale-105 transform transition-all duration-300 shadow-2xl hover:shadow-pink-500/50"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
             >
               Empezar ahora, es gratis
-              <ArrowRight className="animate-pulse" />
+              <ArrowRight className="w-4 h-4" />
             </a>
           </div>
+          <div className="flex justify-center gap-6">
+            <div className="w-32 h-32 bg-white rounded-2xl p-3 rotate-[-3deg]">
+              {/* QR ilustrativo */}
+              <svg viewBox="0 0 100 100" className="w-full h-full text-gray-900" fill="currentColor">
+                <rect x="8" y="8" width="26" height="26" rx="3" fill="none" stroke="currentColor" strokeWidth="6" />
+                <rect x="17" y="17" width="8" height="8" />
+                <rect x="66" y="8" width="26" height="26" rx="3" fill="none" stroke="currentColor" strokeWidth="6" />
+                <rect x="75" y="17" width="8" height="8" />
+                <rect x="8" y="66" width="26" height="26" rx="3" fill="none" stroke="currentColor" strokeWidth="6" />
+                <rect x="17" y="75" width="8" height="8" />
+                <rect x="45" y="8" width="8" height="8" /><rect x="45" y="24" width="8" height="8" />
+                <rect x="8" y="45" width="8" height="8" /><rect x="24" y="45" width="8" height="8" />
+                <rect x="45" y="45" width="8" height="8" /><rect x="61" y="45" width="8" height="8" />
+                <rect x="84" y="45" width="8" height="8" /><rect x="45" y="61" width="8" height="8" />
+                <rect x="66" y="66" width="8" height="8" /><rect x="84" y="66" width="8" height="8" />
+                <rect x="45" y="84" width="8" height="8" /><rect x="66" y="84" width="8" height="8" />
+                <rect x="84" y="84" width="8" height="8" />
+              </svg>
+            </div>
+            <div className="w-32 h-32 bg-emerald-500 rounded-2xl rotate-3 flex items-center justify-center">
+              <Share2 className="w-12 h-12 text-white" strokeWidth={1.6} />
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Sugerencias / Feedback */}
-      <div className="relative py-20 bg-black/20">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center p-10 bg-white/5 backdrop-blur-lg rounded-3xl border border-white/10">
-            <Mail className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              ¿Se te ocurre algo para mejorar?
-            </h2>
-            <p className="text-lg text-purple-200 mb-8">
-              MiniBio está en pleno desarrollo y las mejores ideas vienen de quienes lo usan. Si encontraste un error o te gustaría que agreguemos algo, escribinos y lo leemos.
-            </p>
-            <a
-              href="mailto:minibioarg@gmail.com?subject=Sugerencia%20para%20MiniBio"
-              className="inline-flex items-center gap-3 px-8 py-4 bg-white/10 border border-white/20 rounded-full text-lg font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
-            >
-              <Mail className="w-5 h-5" />
-              minibioarg@gmail.com
-            </a>
-          </div>
-        </div>
-      </div>
+      {/* Sugerencias */}
+      <section className="max-w-3xl mx-auto px-6 py-20 md:py-24 text-center">
+        <Mail className="w-8 h-8 text-indigo-600 mx-auto mb-4" strokeWidth={1.8} />
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+          ¿Se te ocurre algo para mejorar?
+        </h2>
+        <p className="text-gray-600 text-lg leading-relaxed mb-8">
+          MiniBio está en pleno desarrollo y las mejores ideas vienen de quienes lo usan. Si encontraste un error o te gustaría que agreguemos algo, escribinos y lo leemos.
+        </p>
+        <a
+          href="mailto:minibioarg@gmail.com?subject=Sugerencia%20para%20MiniBio"
+          className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 rounded-xl font-semibold text-gray-800 hover:border-gray-900 hover:bg-gray-50 transition-colors"
+        >
+          <Mail className="w-4 h-4" />
+          minibioarg@gmail.com
+        </a>
+      </section>
 
       {/* Footer */}
-      <footer className="relative py-12 border-t border-white/10">
-        <div className="container mx-auto px-6 text-center">
-          <div className="flex items-center justify-center gap-2 text-2xl font-bold mb-4">
-            <Sparkles className="text-yellow-400" />
-            <span className="bg-gradient-to-r from-yellow-400 to-pink-400 bg-clip-text text-transparent">
-              MiniBio.ar
-            </span>
-          </div>
-          <p className="text-purple-200 mb-2">
+      <footer className="border-t border-gray-200/70">
+        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+          <span className="font-bold text-gray-900 text-base">
+            minibio<span className="text-indigo-600">.ar</span>
+          </span>
+          <p>
             Gratuito durante el desarrollo · Sugerencias:{' '}
-            <a href="mailto:minibioarg@gmail.com" className="font-semibold text-gray-200 hover:underline">
+            <a href="mailto:minibioarg@gmail.com" className="font-medium text-gray-700 hover:underline">
               minibioarg@gmail.com
             </a>
           </p>
-          <p className="text-purple-200">
-            © 2026 MiniBio.ar · <Link href="/terms" className="font-semibold text-gray-200 hover:underline">Términos y condiciones</Link>
+          <p>
+            © 2026 MiniBio.ar ·{' '}
+            <Link href="/terms" className="font-medium text-gray-700 hover:underline">
+              Términos y condiciones
+            </Link>
           </p>
         </div>
       </footer>
