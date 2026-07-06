@@ -195,7 +195,7 @@ export default function MiniBioLanding() {
           ¿Se te ocurre algo para mejorar?
         </h2>
         <p className="text-gray-600 text-lg leading-relaxed mb-8">
-          MiniBio está en pleno desarrollo y las mejores ideas vienen de quienes lo usan. Si encontraste un error o te gustaría que agreguemos algo, escribinos y lo leemos.
+          MiniBio está en pleno desarrollo, y las mejores ideas vienen de quienes lo usan. Si encontraste un error o te gustaría que agreguemos algo, escribinos y lo leemos.
         </p>
         <a
           href="mailto:minibioarg@gmail.com?subject=Sugerencia%20para%20MiniBio"
