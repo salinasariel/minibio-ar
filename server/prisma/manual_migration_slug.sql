@@ -47,6 +47,9 @@ CREATE TABLE IF NOT EXISTS password_resets (
 ALTER TABLE pages ADD COLUMN IF NOT EXISTS whatsapp TEXT;
 ALTER TABLE pages ADD COLUMN IF NOT EXISTS hours JSONB;
 ALTER TABLE pages ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE pages ADD COLUMN IF NOT EXISTS payment_alias TEXT;
+ALTER TABLE pages ADD COLUMN IF NOT EXISTS payment_link TEXT;
+ALTER TABLE pages ADD COLUMN IF NOT EXISTS reviews_url TEXT;
 ALTER TABLE menus ADD COLUMN IF NOT EXISTS category TEXT;
 
 -- 5. stat_events: analítica de visitas y clicks

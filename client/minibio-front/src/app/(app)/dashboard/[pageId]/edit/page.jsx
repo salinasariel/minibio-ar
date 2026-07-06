@@ -8,10 +8,19 @@ import Button from '@/components/Button';
 import Card from '@/components/Card';
 import Input from '@/components/Input';
 import { THEMES, DEFAULT_THEME, randomGradient } from '@/lib/themes';
-import { compressImage } from '@/lib/image';
+import { compressImage, extractColors } from '@/lib/image';
 import { DAY_KEYS, DAY_NAMES } from '@/lib/hours';
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar';
+
+// Secciones opcionales de la página, agregables con "+"
+const SECTION_DEFS = [
+  { key: 'whatsapp', emoji: '💬', label: 'WhatsApp', desc: 'Botón verde para que te escriban directo' },
+  { key: 'address', emoji: '📍', label: 'Ubicación', desc: 'Dirección con link a Google Maps' },
+  { key: 'payment', emoji: '💸', label: 'Datos de pago', desc: 'Alias/CVU para transferencias y link de MercadoPago' },
+  { key: 'reviews', emoji: '⭐', label: 'Reseñas de Google', desc: 'Botón para que te dejen reseñas' },
+  { key: 'hours', emoji: '🕐', label: 'Horarios', desc: 'Abierto/cerrado automático según tu horario' },
+];
 
 export default function EditPage(props) {
   const { pageId } = use(props.params);
@@ -40,9 +49,46 @@ export default function EditPage(props) {
   const [pageAvatar, setPageAvatar] = useState(''); // data-URL o URL
   const [pageWhatsapp, setPageWhatsapp] = useState('');
   const [pageAddress, setPageAddress] = useState('');
+  const [paymentAlias, setPaymentAlias] = useState('');
+  const [paymentLink, setPaymentLink] = useState('');
+  const [reviewsUrl, setReviewsUrl] = useState('');
+  const [sections, setSections] = useState([]); // keys de SECTION_DEFS activas
+  const [showAddMenu, setShowAddMenu] = useState(false);
   const [tab, setTab] = useState('pagina'); // 'pagina' | 'links' | 'productos'
+
+  const addSection = (key) => {
+    setSections([...sections, key]);
+    setShowAddMenu(false);
+  };
+
+  const removeSection = (key) => {
+    setSections(sections.filter((s) => s !== key));
+    // Limpiar los valores de la sección para que se borren al guardar
+    if (key === 'whatsapp') setPageWhatsapp('');
+    if (key === 'address') setPageAddress('');
+    if (key === 'payment') { setPaymentAlias(''); setPaymentLink(''); }
+    if (key === 'reviews') setReviewsUrl('');
+    if (key === 'hours') setPageHours({});
+  };
+
+  // Sugerir degradado desde la foto de perfil
+  const handleColorsFromPhoto = async () => {
+    if (!pageAvatar) return;
+    try {
+      const colors = await extractColors(pageAvatar);
+      if (colors) {
+        setCustomFrom(colors.from);
+        setCustomTo(colors.to);
+        setPageTheme('custom');
+        showSuccess('Colores tomados de tu foto');
+      } else {
+        setError('No encontramos colores fuertes en la foto');
+      }
+    } catch {
+      setError('No se pudieron extraer los colores');
+    }
+  };
   const [pageHours, setPageHours] = useState({}); // { mon: {closed, open, close}, ... }
-  const [showHours, setShowHours] = useState(false);
   const [compressingAvatar, setCompressingAvatar] = useState(false);
   const [savingPage, setSavingPage] = useState(false);
 
@@ -67,6 +113,47 @@ export default function EditPage(props) {
   const [menuPrice, setMenuPrice] = useState('');
   const [menuImage, setMenuImage] = useState(''); // data-URL comprimida
   const [menuCategory, setMenuCategory] = useState('');
+  const [adjustPercent, setAdjustPercent] = useState('');
+  const [showAdjust, setShowAdjust] = useState(false);
+  const [adjusting, setAdjusting] = useState(false);
+
+  // Ajuste masivo de precios: aplica % a todos los productos con precio
+  const handleAdjustPrices = async () => {
+    const pct = parseFloat(adjustPercent);
+    if (Number.isNaN(pct) || pct === 0 || pct < -90 || pct > 500) {
+      setError('Ingresá un porcentaje entre -90 y 500');
+      return;
+    }
+    const withPrice = menuItems.filter((m) => m.price !== null && m.price !== undefined);
+    if (withPrice.length === 0) {
+      setError('No hay productos con precio para ajustar');
+      return;
+    }
+    if (!confirm(`¿Ajustar ${withPrice.length} precio${withPrice.length > 1 ? 's' : ''} en ${pct > 0 ? '+' : ''}${pct}%?`)) return;
+
+    setError('');
+    setAdjusting(true);
+    try {
+      const updated = [];
+      for (const item of withPrice) {
+        const newPrice = Math.round(Number(item.price) * (1 + pct / 100));
+        const u = await apiFetch(`/menus/${item.id}`, token, {
+          method: 'PUT',
+          body: { price: newPrice },
+        });
+        updated.push(u);
+      }
+      setMenuItems(menuItems.map((m) => updated.find((u) => u.id === m.id) || m));
+      setShowAdjust(false);
+      setAdjustPercent('');
+      showSuccess(`Precios ajustados ${pct > 0 ? '+' : ''}${pct}%`);
+    } catch (err) {
+      setError(err.message);
+      fetchPage(); // re-sincronizar por si quedó a medias
+    } finally {
+      setAdjusting(false);
+    }
+  };
   const [compressing, setCompressing] = useState(false);
   const [showMenuForm, setShowMenuForm] = useState(false);
 
@@ -108,8 +195,19 @@ export default function EditPage(props) {
       setPageAvatar(data.avatar_url || '');
       setPageWhatsapp(data.whatsapp || '');
       setPageAddress(data.address || '');
+      setPaymentAlias(data.payment_alias || '');
+      setPaymentLink(data.payment_link || '');
+      setReviewsUrl(data.reviews_url || '');
       setPageHours(data.hours || {});
-      setShowHours(Boolean(data.hours));
+
+      // Activar las secciones que ya tienen datos
+      const active = [];
+      if (data.whatsapp) active.push('whatsapp');
+      if (data.address) active.push('address');
+      if (data.payment_alias || data.payment_link) active.push('payment');
+      if (data.reviews_url) active.push('reviews');
+      if (data.hours) active.push('hours');
+      setSections(active);
       if (data.theme?.from && data.theme?.to) {
         setPageTheme('custom');
         setCustomFrom(data.theme.from);
@@ -155,7 +253,10 @@ export default function EditPage(props) {
           avatar_url: pageAvatar || '',
           whatsapp: pageWhatsapp || '',
           address: pageAddress || '',
-          hours: showHours && Object.keys(pageHours).length > 0 ? pageHours : null,
+          payment_alias: paymentAlias || '',
+          payment_link: paymentLink || '',
+          reviews_url: reviewsUrl || '',
+          hours: sections.includes('hours') && Object.keys(pageHours).length > 0 ? pageHours : null,
           theme:
             pageTheme === 'custom'
               ? { from: customFrom, to: customTo }
@@ -510,10 +611,13 @@ export default function EditPage(props) {
                 <span className="text-gray-500 text-sm whitespace-nowrap">.{ROOT_DOMAIN}</span>
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                WhatsApp para pedidos (opcional)
-              </label>
+            {/* ========== Secciones opcionales ========== */}
+            {sections.includes('whatsapp') && (
+            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-sm font-semibold text-gray-800">💬 WhatsApp</label>
+                <button type="button" onClick={() => removeSection('whatsapp')} className="text-xs text-red-500 hover:underline">Quitar</button>
+              </div>
               <input
                 type="tel"
                 value={pageWhatsapp}
@@ -522,14 +626,17 @@ export default function EditPage(props) {
                 className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <p className="text-xs text-gray-400 mt-1">
-                Si lo cargás, tu página muestra un botón verde "Pedinos por WhatsApp". Con código de país (54 para Argentina).
+                Tu página muestra un botón verde "WhatsApp". Con código de país (54 para Argentina).
               </p>
             </div>
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dirección (opcional)
-              </label>
+            {sections.includes('address') && (
+            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-sm font-semibold text-gray-800">📍 Ubicación</label>
+                <button type="button" onClick={() => removeSection('address')} className="text-xs text-red-500 hover:underline">Quitar</button>
+              </div>
               <input
                 type="text"
                 value={pageAddress}
@@ -542,21 +649,70 @@ export default function EditPage(props) {
                 Tu página muestra la dirección con un link a Google Maps ("cómo llegar").
               </p>
             </div>
+            )}
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-gray-700">Horarios de atención (opcional)</label>
-                <button
-                  type="button"
-                  onClick={() => setShowHours(!showHours)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                    showHours ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
-                  }`}
-                >
-                  {showHours ? 'Mostrando horarios' : 'Sin horarios'}
-                </button>
+            {sections.includes('payment') && (
+            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-sm font-semibold text-gray-800">💸 Datos de pago</label>
+                <button type="button" onClick={() => removeSection('payment')} className="text-xs text-red-500 hover:underline">Quitar</button>
               </div>
-              {showHours && (
+              <div className="space-y-3">
+                <div>
+                  <input
+                    type="text"
+                    value={paymentAlias}
+                    onChange={(e) => setPaymentAlias(e.target.value)}
+                    placeholder="tu.alias.mp o CVU"
+                    maxLength={60}
+                    className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Alias o CVU para transferencias. Tu página lo muestra con un botón "copiar".
+                  </p>
+                </div>
+                <div>
+                  <input
+                    type="url"
+                    value={paymentLink}
+                    onChange={(e) => setPaymentLink(e.target.value)}
+                    placeholder="https://mpago.la/... (opcional)"
+                    className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Link de pago de MercadoPago (mpago.la). Agrega un botón "Pagar con MercadoPago".
+                  </p>
+                </div>
+              </div>
+            </div>
+            )}
+
+            {sections.includes('reviews') && (
+            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-sm font-semibold text-gray-800">⭐ Reseñas de Google</label>
+                <button type="button" onClick={() => removeSection('reviews')} className="text-xs text-red-500 hover:underline">Quitar</button>
+              </div>
+              <input
+                type="url"
+                value={reviewsUrl}
+                onChange={(e) => setReviewsUrl(e.target.value)}
+                placeholder="https://g.page/r/... o link de Google Maps"
+                className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                El link de reseñas de tu ficha de Google. Tu página muestra un botón "Dejanos tu reseña".
+              </p>
+            </div>
+            )}
+
+            {sections.includes('hours') && (
+            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold text-gray-800">🕐 Horarios de atención</label>
+                <button type="button" onClick={() => removeSection('hours')} className="text-xs text-red-500 hover:underline">Quitar</button>
+              </div>
+              {true && (
                 <div className="space-y-2 bg-gray-50 border border-gray-200 rounded-xl p-3">
                   {DAY_KEYS.map((k) => {
                     const d = pageHours[k] || {};
@@ -606,6 +762,38 @@ export default function EditPage(props) {
                 </div>
               )}
             </div>
+            )}
+
+            {/* + Agregar sección */}
+            {SECTION_DEFS.filter((s) => !sections.includes(s.key)).length > 0 && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowAddMenu(!showAddMenu)}
+                className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-medium hover:border-blue-400 hover:text-blue-600 transition-colors"
+              >
+                <span className="text-xl leading-none">+</span> Agregar a tu página
+              </button>
+              {showAddMenu && (
+                <div className="absolute z-20 mt-2 w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
+                  {SECTION_DEFS.filter((s) => !sections.includes(s.key)).map((s) => (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={() => addSection(s.key)}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-blue-50 transition-colors"
+                    >
+                      <span className="text-xl">{s.emoji}</span>
+                      <span>
+                        <span className="block text-sm font-semibold text-gray-900">{s.label}</span>
+                        <span className="block text-xs text-gray-500">{s.desc}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Tema</label>
@@ -661,6 +849,24 @@ export default function EditPage(props) {
                   </span>
                   <span className="text-xs text-gray-600">Random</span>
                 </button>
+
+                {/* Colores desde la foto */}
+                {pageAvatar && (
+                  <button
+                    type="button"
+                    onClick={handleColorsFromPhoto}
+                    className="flex flex-col items-center gap-1 focus:outline-none"
+                    title="Usar los colores de tu foto de perfil"
+                  >
+                    <span
+                      className="w-12 h-12 rounded-full border-4 border-white bg-cover bg-center flex items-center justify-center text-xl"
+                      style={{ backgroundImage: `url(${pageAvatar})` }}
+                    >
+                      🎨
+                    </span>
+                    <span className="text-xs text-gray-600">De tu foto</span>
+                  </button>
+                )}
               </div>
 
               {pageTheme === 'custom' && (
@@ -824,14 +1030,58 @@ export default function EditPage(props) {
         {/* Menú digital */}
         {tab === 'productos' && (
         <>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
           <h2 className="text-2xl font-bold text-gray-900">Productos ({menuItems.length})</h2>
-          {!showMenuForm && (
-            <Button onClick={() => setShowMenuForm(true)} variant="primary" size="small">
-              + Agregar producto
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {menuItems.some((m) => m.price !== null && m.price !== undefined) && (
+              <Button onClick={() => setShowAdjust(!showAdjust)} variant="secondary" size="small">
+                % Ajustar precios
+              </Button>
+            )}
+            {!showMenuForm && (
+              <Button onClick={() => setShowMenuForm(true)} variant="primary" size="small">
+                + Agregar producto
+              </Button>
+            )}
+          </div>
         </div>
+
+        {showAdjust && (
+          <Card variant="glass" padding="large" className="mb-6 p-5 animate-scale-in">
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Ajuste rápido de precios</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Aplica el porcentaje a todos los productos con precio. Ideal para actualizar por inflación sin editar uno por uno.
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={adjustPercent}
+                  onChange={(e) => setAdjustPercent(e.target.value)}
+                  placeholder="10"
+                  className="w-24 px-3 py-2 bg-gray-50 text-gray-900 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <span className="text-gray-600 font-semibold">%</span>
+              </div>
+              {[10, 15, 25].map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setAdjustPercent(String(p))}
+                  className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-200"
+                >
+                  +{p}%
+                </button>
+              ))}
+              <Button onClick={handleAdjustPrices} variant="primary" size="small" loading={adjusting}>
+                Aplicar
+              </Button>
+              <Button onClick={() => setShowAdjust(false)} variant="secondary" size="small">
+                Cancelar
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {showMenuForm && (
           <Card variant="glass" padding="large" className="mb-6 p-5 animate-scale-in">

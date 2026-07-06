@@ -37,6 +37,9 @@ model Page {
   avatar_url String?
   whatsapp   String? // número para el botón destacado (solo dígitos)
   address    String? // dirección física, para el link a Google Maps
+  payment_alias String? // alias o CVU para transferencias
+  payment_link  String? // link de pago de MercadoPago
+  reviews_url   String? // link a reseñas de Google
   hours      Json? // horarios: { mon: {open,close,closed}, ... }
   theme      Json?
   created_at DateTime @default(now())

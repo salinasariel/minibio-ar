@@ -18,6 +18,15 @@ export default function PublicProfilePage() {
   const [lightbox, setLightbox] = useState(null); // { src, alt } | null
   const [qrDataUrl, setQrDataUrl] = useState(null); // data-URL del QR (modal abierto si != null)
   const [shareMsg, setShareMsg] = useState('');
+  const [aliasCopied, setAliasCopied] = useState(false);
+
+  const copyAlias = async () => {
+    try {
+      await navigator.clipboard.writeText(profile.payment_alias);
+      setAliasCopied(true);
+      setTimeout(() => setAliasCopied(false), 2000);
+    } catch {}
+  };
 
   const pageUrl = () => (typeof window !== 'undefined' ? window.location.href : '');
 
@@ -381,6 +390,51 @@ export default function PublicProfilePage() {
               ));
             })()}
           </div>
+        )}
+
+        {/* Datos de pago */}
+        {(profile.payment_alias || profile.payment_link) && (
+          <div className="mb-8 p-5 bg-white/20 backdrop-blur-md rounded-2xl border-2 border-white/30 text-center">
+            <p className="text-white font-bold text-lg mb-3">💸 Formas de pago</p>
+            {profile.payment_alias && (
+              <button
+                type="button"
+                onClick={copyAlias}
+                className="w-full mb-2 px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white font-mono text-sm hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
+                title="Copiar alias"
+              >
+                <span className="truncate">{profile.payment_alias}</span>
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+            )}
+            {aliasCopied && (
+              <p className="text-green-300 text-sm font-medium mb-2">¡Alias copiado!</p>
+            )}
+            {profile.payment_link && (
+              <a
+                href={profile.payment_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full px-4 py-3 bg-[#009EE3] rounded-xl text-white font-semibold hover:bg-[#0089c4] transition-colors"
+              >
+                Pagar con MercadoPago
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Reseñas de Google */}
+        {profile.reviews_url && (
+          <a
+            href={profile.reviews_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full p-4 mb-8 bg-white/20 backdrop-blur-md rounded-2xl border-2 border-white/30 text-white font-semibold text-center hover:bg-white/30 transition-all hover:scale-105"
+          >
+            ⭐ Dejanos tu reseña en Google
+          </a>
         )}
 
         {/* QR y Compartir */}

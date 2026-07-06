@@ -5,7 +5,7 @@ const { uniqueSlug } = require('../lib/slug');
 // CREAR NUEVA PÁGINA
 // ========================================
 exports.createPage = async (req, res) => {
-  const { title, bio, theme, slug, avatar_url, whatsapp, hours, address } = req.body;
+  const { title, bio, theme, slug, avatar_url, whatsapp, hours, address, payment_alias, payment_link, reviews_url } = req.body;
   const userId = req.user.userId;
 
   try {
@@ -19,6 +19,9 @@ exports.createPage = async (req, res) => {
         avatar_url: avatar_url || null,
         whatsapp: whatsapp || null,
         address: address || null,
+        payment_alias: payment_alias || null,
+        payment_link: payment_link || null,
+        reviews_url: reviews_url || null,
         hours: hours || null,
         theme: theme || null,
         user_id: userId,
@@ -94,7 +97,7 @@ exports.getPageById = async (req, res) => {
 // ========================================
 exports.updatePage = async (req, res) => {
   const { pageId } = req.params;
-  const { title, bio, theme, slug, avatar_url, whatsapp, hours, address } = req.body;
+  const { title, bio, theme, slug, avatar_url, whatsapp, hours, address, payment_alias, payment_link, reviews_url } = req.body;
   const userId = req.user.userId;
 
   const id = parseInt(pageId, 10);
@@ -117,6 +120,9 @@ exports.updatePage = async (req, res) => {
     if (avatar_url !== undefined) data.avatar_url = avatar_url || null;
     if (whatsapp !== undefined) data.whatsapp = whatsapp || null;
     if (address !== undefined) data.address = address || null;
+    if (payment_alias !== undefined) data.payment_alias = payment_alias || null;
+    if (payment_link !== undefined) data.payment_link = payment_link || null;
+    if (reviews_url !== undefined) data.reviews_url = reviews_url || null;
     if (hours !== undefined) data.hours = hours;
     if (theme !== undefined) data.theme = theme;
     if (slug !== undefined && slug !== page.slug) {

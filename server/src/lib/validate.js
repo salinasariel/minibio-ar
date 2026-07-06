@@ -88,12 +88,53 @@ const hoursSchema = z
   })
   .nullable();
 
+// Link de pago: solo dominios de MercadoPago (evita links disfrazados)
+const paymentLinkSchema = z
+  .string()
+  .trim()
+  .max(300)
+  .url('Link inválido')
+  .refine((u) => {
+    try {
+      const host = new URL(u).hostname.toLowerCase();
+      return host === 'mpago.la' || host.endsWith('.mercadopago.com.ar') || host.endsWith('.mercadopago.com') || host === 'mercadopago.com.ar' || host === 'mercadopago.com';
+    } catch {
+      return false;
+    }
+  }, 'Debe ser un link de MercadoPago (mpago.la o mercadopago.com)');
+
+// Link de reseñas: solo dominios de Google
+const reviewsUrlSchema = z
+  .string()
+  .trim()
+  .max(300)
+  .url('Link inválido')
+  .refine((u) => {
+    try {
+      const host = new URL(u).hostname.toLowerCase();
+      return (
+        host === 'g.page' ||
+        host === 'maps.app.goo.gl' ||
+        host === 'goo.gl' ||
+        host.endsWith('.google.com') ||
+        host === 'google.com' ||
+        host.endsWith('.google.com.ar') ||
+        host === 'google.com.ar'
+      );
+    } catch {
+      return false;
+    }
+  }, 'Debe ser un link de Google (g.page, maps.app.goo.gl o google.com)');
+
 const pageCreateSchema = z.object({
   title: z.string().trim().min(1, 'Título requerido').max(60),
   bio: z.string().trim().max(300).optional().default(''),
   avatar_url: imageSchema.optional().nullable().or(z.literal('')),
   whatsapp: whatsappSchema.optional(),
   address: z.string().trim().max(120).optional().nullable().or(z.literal('')),
+  payment_alias: z.string().trim().max(60).optional().nullable().or(z.literal('')),
+  payment_link: paymentLinkSchema.optional().nullable().or(z.literal('')),
+  reviews_url: reviewsUrlSchema.optional().nullable().or(z.literal('')),
   hours: hoursSchema.optional(),
   theme: z.record(z.any()).nullable().optional(),
   slug: slugSchema.optional(),
@@ -105,6 +146,9 @@ const pageUpdateSchema = z.object({
   avatar_url: imageSchema.optional().nullable().or(z.literal('')),
   whatsapp: whatsappSchema.optional(),
   address: z.string().trim().max(120).optional().nullable().or(z.literal('')),
+  payment_alias: z.string().trim().max(60).optional().nullable().or(z.literal('')),
+  payment_link: paymentLinkSchema.optional().nullable().or(z.literal('')),
+  reviews_url: reviewsUrlSchema.optional().nullable().or(z.literal('')),
   hours: hoursSchema.optional(),
   theme: z.record(z.any()).nullable().optional(),
   slug: slugSchema.optional(),
