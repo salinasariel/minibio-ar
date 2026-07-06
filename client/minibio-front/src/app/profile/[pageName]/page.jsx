@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useParams } from "next/navigation";
-import { getThemeView } from '@/lib/themes';
+import { getThemeView, getButtonView } from '@/lib/themes';
 import { LinkIcon } from '@/lib/linkIcons';
 import { DAY_KEYS, DAY_NAMES, hasHours, isOpenNow } from '@/lib/hours';
 
@@ -145,6 +145,7 @@ export default function PublicProfilePage() {
   };
 
   const themeView = getThemeView(profile?.theme);
+  const buttonView = getButtonView(profile?.theme);
   // Prioridad: título de la página > nombre del usuario > username
   const displayName = profile?.title || profile?.display_name || profile?.username || '';
   const initial = (displayName || '?').charAt(0).toUpperCase();
@@ -191,7 +192,7 @@ export default function PublicProfilePage() {
 
   return (
     <div
-      className={`min-h-screen ${themeView.className} relative overflow-hidden`}
+      className={`min-h-screen ${themeView.className} ${themeView.fontClass} relative overflow-hidden`}
       style={themeView.style}
     >
       {/* Animated background blobs */}
@@ -308,8 +309,8 @@ export default function PublicProfilePage() {
               <button
                 key={link.id}
                 onClick={() => handleLinkClick(link.id, link.url)}
-                className="block w-full p-5 bg-white/20 backdrop-blur-md rounded-2xl border-2 border-white/30 text-white font-semibold text-lg text-center transition-all duration-300 hover:bg-white/30 hover:scale-105 hover:shadow-2xl active:scale-95 cursor-pointer animate-slide-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                className={`block w-full p-5 font-semibold text-lg text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 cursor-pointer animate-slide-up ${buttonView.className}`}
+                style={{ animationDelay: `${index * 0.1}s`, ...(buttonView.style || {}) }}
               >
                 <div className="flex items-center justify-center gap-3">
                   <LinkIcon url={link.url} className="w-5 h-5 flex-shrink-0" />

@@ -18,6 +18,7 @@ model User {
   display_name  String?
   avatar_url    String?
   email_verified Boolean  @default(false)
+  ai_enabled     Boolean  @default(false) // habilita el asistente IA (beta)
   verification_token String?
   token_expires  DateTime?
   created_at    DateTime @default(now())

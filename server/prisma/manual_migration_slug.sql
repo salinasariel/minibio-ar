@@ -52,6 +52,10 @@ ALTER TABLE pages ADD COLUMN IF NOT EXISTS payment_link TEXT;
 ALTER TABLE pages ADD COLUMN IF NOT EXISTS reviews_url TEXT;
 ALTER TABLE menus ADD COLUMN IF NOT EXISTS category TEXT;
 
+-- 4c. IA beta: flag por usuario (activado solo para la cuenta admin)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_enabled BOOLEAN NOT NULL DEFAULT false;
+UPDATE users SET ai_enabled = true WHERE email = 'minibioarg@gmail.com';
+
 -- 5. stat_events: analítica de visitas y clicks
 CREATE TABLE IF NOT EXISTS stat_events (
   id SERIAL PRIMARY KEY,

@@ -15,6 +15,7 @@ const publicUser = (user) => ({
   email: user.email,
   username: user.username,
   display_name: user.display_name,
+  ai_enabled: user.ai_enabled || false,
 });
 
 const generateToken = (length = 32) => crypto.randomBytes(length).toString('hex');

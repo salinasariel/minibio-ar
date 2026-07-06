@@ -56,6 +56,101 @@ export default function EditPage(props) {
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [tab, setTab] = useState('pagina'); // 'pagina' | 'links' | 'productos'
 
+  // Asistente IA (beta)
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiProposal, setAiProposal] = useState(null); // { notes, page }
+  const [aiApplying, setAiApplying] = useState(false);
+
+  const handleAiGenerate = async () => {
+    if (aiPrompt.trim().length < 5) return;
+    setAiLoading(true);
+    setAiProposal(null);
+    try {
+      const current = {
+        title: pageTitle,
+        bio: pageBio,
+        theme: page?.theme,
+        whatsapp: pageWhatsapp,
+        address: pageAddress,
+        hours: pageHours,
+        links: links.map((l) => ({ title: l.title, url: l.url })),
+        products: menuItems.map((m) => ({ product_name: m.product_name, category: m.category, price: m.price })),
+      };
+      const data = await apiFetch('/ai/page', token, {
+        method: 'POST',
+        body: { prompt: aiPrompt, current },
+      });
+      setAiProposal(data.proposal);
+    } catch (err) {
+      setError(err.message);
+      setAiOpen(false);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleAiApply = async () => {
+    const p = aiProposal?.page;
+    if (!p) return;
+    setAiApplying(true);
+    setError('');
+    try {
+      // Campos de página: solo los que la IA propuso
+      const body = {};
+      if (p.title) body.title = p.title;
+      if (p.bio !== undefined) body.bio = p.bio;
+      if (p.whatsapp) body.whatsapp = p.whatsapp;
+      if (p.address) body.address = p.address;
+      if (p.hours) body.hours = p.hours;
+      if (p.theme) {
+        // Merge de tokens sobre el theme actual
+        body.theme = {
+          ...(page?.theme || {}),
+          ...p.theme,
+          ...(p.theme.button ? { button: { ...(page?.theme?.button || {}), ...p.theme.button } } : {}),
+        };
+        // Si vienen colores custom, pisan el preset (y viceversa)
+        if (p.theme.from && p.theme.to) delete body.theme.preset;
+        if (p.theme.preset) { delete body.theme.from; delete body.theme.to; }
+      }
+      if (Object.keys(body).length > 0) {
+        await apiFetch(`/pages/${pageId}`, token, { method: 'PUT', body });
+      }
+
+      // Links y productos NUEVOS
+      for (const l of p.links || []) {
+        await apiFetch('/links', token, {
+          method: 'POST',
+          body: { page_id: parseInt(pageId), title: l.title, url: l.url },
+        });
+      }
+      for (const m of p.products || []) {
+        await apiFetch('/menus', token, {
+          method: 'POST',
+          body: {
+            page_id: parseInt(pageId),
+            product_name: m.product_name,
+            product_description: m.product_description || null,
+            category: m.category || null,
+            price: m.price ?? null,
+          },
+        });
+      }
+
+      setAiOpen(false);
+      setAiProposal(null);
+      setAiPrompt('');
+      await fetchPage();
+      showSuccess('✨ Cambios de la IA aplicados');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAiApplying(false);
+    }
+  };
+
   const addSection = (key) => {
     setSections([...sections, key]);
     setShowAddMenu(false);
@@ -464,6 +559,15 @@ export default function EditPage(props) {
               Dashboard
             </Link>
             <div className="flex items-center gap-2">
+              {user?.ai_enabled && (
+                <button
+                  onClick={() => setAiOpen(true)}
+                  className="px-3 py-2 text-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity"
+                  title="Asistente IA (beta)"
+                >
+                  ✨ IA
+                </button>
+              )}
               <a
                 href={publicUrl}
                 target="_blank"
@@ -1238,6 +1342,126 @@ export default function EditPage(props) {
         </>
         )}
       </div>
+
+      {/* Modal Asistente IA */}
+      {aiOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => !aiLoading && !aiApplying && setAiOpen(false)}>
+          <div className="bg-white rounded-3xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-gray-900 mb-1">✨ Asistente IA <span className="text-xs font-semibold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full align-middle">beta</span></h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Contale qué querés para tu página: contenido, productos o estilo. Te muestra la propuesta antes de aplicar nada.
+            </p>
+
+            <textarea
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder={'Ej: "Soy barbero en Rosario, atiendo de martes a sábado de 10 a 19. Quiero un estilo oscuro con botones cuadrados y que me contacten por WhatsApp."'}
+              rows={4}
+              maxLength={600}
+              disabled={aiLoading || aiApplying}
+              className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 mb-3"
+            />
+
+            {!aiProposal && (
+              <Button onClick={handleAiGenerate} variant="primary" fullWidth loading={aiLoading}>
+                {aiLoading ? 'Pensando…' : 'Generar propuesta'}
+              </Button>
+            )}
+
+            {/* Propuesta */}
+            {aiProposal && (
+              <div className="mt-2">
+                {aiProposal.notes && (
+                  <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+                    {aiProposal.notes}
+                  </div>
+                )}
+                <div className="border border-gray-200 rounded-xl divide-y divide-gray-100 text-sm mb-4">
+                  {aiProposal.page.title && (
+                    <div className="p-3"><span className="text-gray-500">Título:</span> <span className="font-semibold text-gray-900">{aiProposal.page.title}</span></div>
+                  )}
+                  {aiProposal.page.bio !== undefined && (
+                    <div className="p-3"><span className="text-gray-500">Bio:</span> <span className="text-gray-800">{aiProposal.page.bio}</span></div>
+                  )}
+                  {aiProposal.page.theme && (
+                    <div className="p-3 flex items-center gap-3">
+                      <span className="text-gray-500">Estilo:</span>
+                      <span
+                        className="w-8 h-8 rounded-full border border-gray-200 inline-block"
+                        style={
+                          aiProposal.page.theme.from && aiProposal.page.theme.to
+                            ? { background: `linear-gradient(135deg, ${aiProposal.page.theme.from}, ${aiProposal.page.theme.to})` }
+                            : { background: '#e5e7eb' }
+                        }
+                      ></span>
+                      <span className="text-gray-700">
+                        {[
+                          aiProposal.page.theme.preset && `tema ${aiProposal.page.theme.preset}`,
+                          aiProposal.page.theme.font && `tipografía ${aiProposal.page.theme.font}`,
+                          aiProposal.page.theme.button?.variant && `botones ${aiProposal.page.theme.button.variant}`,
+                        ].filter(Boolean).join(' · ') || 'colores personalizados'}
+                      </span>
+                    </div>
+                  )}
+                  {aiProposal.page.whatsapp && (
+                    <div className="p-3"><span className="text-gray-500">WhatsApp:</span> <span className="text-gray-800">{aiProposal.page.whatsapp}</span></div>
+                  )}
+                  {aiProposal.page.address && (
+                    <div className="p-3"><span className="text-gray-500">Dirección:</span> <span className="text-gray-800">{aiProposal.page.address}</span></div>
+                  )}
+                  {aiProposal.page.hours && (
+                    <div className="p-3"><span className="text-gray-500">Horarios:</span> <span className="text-gray-800">se actualizan</span></div>
+                  )}
+                  {(aiProposal.page.links || []).length > 0 && (
+                    <div className="p-3">
+                      <span className="text-gray-500">Links nuevos:</span>
+                      <ul className="mt-1 space-y-0.5">
+                        {aiProposal.page.links.map((l, i) => (
+                          <li key={i} className="text-gray-800">+ {l.title} <span className="text-gray-400 text-xs">({l.url})</span></li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {(aiProposal.page.products || []).length > 0 && (
+                    <div className="p-3">
+                      <span className="text-gray-500">Productos nuevos:</span>
+                      <ul className="mt-1 space-y-0.5">
+                        {aiProposal.page.products.map((m, i) => (
+                          <li key={i} className="text-gray-800">
+                            + {m.product_name}
+                            {m.price !== undefined && <span className="text-gray-500"> · ${m.price}</span>}
+                            {m.category && <span className="text-violet-600 text-xs"> · {m.category}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {Object.keys(aiProposal.page).length === 0 && (
+                    <div className="p-3 text-gray-500">La IA no propuso cambios para este pedido.</div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleAiApply} variant="primary" fullWidth loading={aiApplying} disabled={Object.keys(aiProposal.page).length === 0}>
+                    Aplicar cambios
+                  </Button>
+                  <Button onClick={() => setAiProposal(null)} variant="secondary" disabled={aiApplying}>
+                    Reintentar
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setAiOpen(false)}
+              disabled={aiLoading || aiApplying}
+              className="mt-3 w-full text-center text-sm text-gray-400 hover:text-gray-600"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
