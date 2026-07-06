@@ -31,13 +31,13 @@ export default function MiniBioLanding() {
               href="https://app.minibio.ar/login"
               className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
             >
-              Iniciar Sesión
+              Login
             </a>
             <a
               href="https://app.minibio.ar/register"
               className="px-4 py-2 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
-              Crear mi página
+              Comenzar
             </a>
           </div>
         </div>
@@ -83,8 +83,8 @@ export default function MiniBioLanding() {
                 <div className="w-16 h-16 mx-auto rounded-full bg-white/25 border-2 border-white/50 flex items-center justify-center text-2xl font-bold text-white mb-3">
                   L
                 </div>
-                <p className="text-center text-white font-bold mb-1">Lo de Lucas</p>
-                <p className="text-center text-white/80 text-xs mb-5">Café de especialidad · Palermo</p>
+                <p className="text-center text-white font-bold mb-1">Palermo Coffe</p>
+                <p className="text-center text-white/80 text-xs mb-5">Café de especialidad · Buenos Aires</p>
                 {['Nuestra carta', 'Pedinos por WhatsApp', 'Instagram'].map((t) => (
                   <div
                     key={t}
