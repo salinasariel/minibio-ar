@@ -185,10 +185,16 @@ exports.trackClick = async (req, res) => {
   }
 
   try {
-    await prisma.link.update({
+    const link = await prisma.link.update({
       where: { id: linkId },
       data: { clicks: { increment: 1 } },
+      select: { id: true, page_id: true },
     });
+
+    // Evento con timestamp para las estadísticas (no bloqueante si falla)
+    prisma.statEvent
+      .create({ data: { page_id: link.page_id, link_id: link.id, type: 'click' } })
+      .catch((e) => console.error('statEvent click error:', e.message));
 
     res.status(200).json({ message: 'Click registrado' });
   } catch (error) {

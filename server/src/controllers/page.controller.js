@@ -5,7 +5,7 @@ const { uniqueSlug } = require('../lib/slug');
 // CREAR NUEVA PÁGINA
 // ========================================
 exports.createPage = async (req, res) => {
-  const { title, bio, theme, slug } = req.body;
+  const { title, bio, theme, slug, avatar_url } = req.body;
   const userId = req.user.userId;
 
   try {
@@ -16,6 +16,7 @@ exports.createPage = async (req, res) => {
         title,
         slug: finalSlug,
         bio: bio || '',
+        avatar_url: avatar_url || null,
         theme: theme || null,
         user_id: userId,
       },
@@ -90,7 +91,7 @@ exports.getPageById = async (req, res) => {
 // ========================================
 exports.updatePage = async (req, res) => {
   const { pageId } = req.params;
-  const { title, bio, theme, slug } = req.body;
+  const { title, bio, theme, slug, avatar_url } = req.body;
   const userId = req.user.userId;
 
   const id = parseInt(pageId, 10);
@@ -110,6 +111,7 @@ exports.updatePage = async (req, res) => {
     const data = {};
     if (title !== undefined) data.title = title;
     if (bio !== undefined) data.bio = bio;
+    if (avatar_url !== undefined) data.avatar_url = avatar_url || null;
     if (theme !== undefined) data.theme = theme;
     if (slug !== undefined && slug !== page.slug) {
       data.slug = await uniqueSlug(slug, page.id);

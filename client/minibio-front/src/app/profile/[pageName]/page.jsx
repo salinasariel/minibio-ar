@@ -30,6 +30,13 @@ export default function PublicProfilePage() {
         setProfile(data.profile);
         setLinks(data.links || []);
         setMenus(data.menus || []);
+
+        // Registrar visita (fire & forget)
+        fetch(`${API_URL}/public/track/view`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug: data.profile?.slug || pageName }),
+        }).catch(() => {});
       } catch (err) {
         console.error(err);
         setError(err.message);
@@ -48,7 +55,8 @@ export default function PublicProfilePage() {
   };
 
   const themeView = getThemeView(profile?.theme);
-  const displayName = profile?.display_name || profile?.title || profile?.username || '';
+  // Prioridad: título de la página > nombre del usuario > username
+  const displayName = profile?.title || profile?.display_name || profile?.username || '';
   const initial = (displayName || '?').charAt(0).toUpperCase();
 
   const formatPrice = (price) => {
@@ -106,11 +114,18 @@ export default function PublicProfilePage() {
         {/* Profile Section */}
         <div className="text-center mb-8 animate-fade-in">
           {profile.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt={displayName}
-              className="w-28 h-28 mx-auto mb-6 rounded-full border-4 border-white/40 shadow-2xl object-cover backdrop-blur-sm"
-            />
+            <button
+              type="button"
+              onClick={() => setLightbox({ src: profile.avatar_url, alt: displayName })}
+              className="focus:outline-none"
+              title="Ver foto"
+            >
+              <img
+                src={profile.avatar_url}
+                alt={displayName}
+                className="w-28 h-28 mx-auto mb-6 rounded-full border-4 border-white/40 shadow-2xl object-cover backdrop-blur-sm cursor-zoom-in hover:scale-105 transition-transform"
+              />
+            </button>
           ) : (
             <div className="w-28 h-28 mx-auto mb-6 rounded-full bg-white/20 backdrop-blur-md border-4 border-white/40 flex items-center justify-center text-5xl font-bold text-white shadow-2xl">
               {initial}

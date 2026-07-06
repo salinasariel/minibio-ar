@@ -91,12 +91,14 @@ const authRoutes = require('./src/routes/auth.routes');
 const pageRoutes = require('./src/routes/page.routes');
 const linkRoutes = require('./src/routes/link.routes');
 const menuRoutes = require('./src/routes/menu.routes');
+const statsRoutes = require('./src/routes/stats.routes');
 const publicRoutes = require('./src/routes/public.routes');
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/pages', pageRoutes);
 app.use('/api/links', linkRoutes);
 app.use('/api/menus', menuRoutes);
+app.use('/api/stats', statsRoutes);
 app.use('/api/public', publicRoutes);
 
 // ========================================

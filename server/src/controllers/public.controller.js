@@ -30,7 +30,7 @@ exports.getPageBySlug = async (req, res) => {
       profile: {
         username: page.user.username,
         display_name: page.user.display_name || page.user.username,
-        avatar_url: page.user.avatar_url,
+        avatar_url: page.avatar_url || page.user.avatar_url,
         title: page.title,
         slug: page.slug,
         bio: page.bio,
@@ -80,7 +80,7 @@ exports.getPublicProfile = async (req, res) => {
       profile: {
         username: user.username,
         display_name: user.display_name || user.username,
-        avatar_url: user.avatar_url,
+        avatar_url: page.avatar_url || user.avatar_url,
         title: page.title,
         slug: page.slug,
         bio: page.bio,

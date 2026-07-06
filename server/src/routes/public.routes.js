@@ -11,6 +11,10 @@ const publicController = require('../controllers/public.controller');
 // Ejemplo: GET /api/public/page-by-slug/mi-cafe
 router.get('/page-by-slug/:slug', publicController.getPageBySlug);
 
+// Registrar visita de página (analítica)
+const statsController = require('../controllers/stats.controller');
+router.post('/track/view', statsController.trackView);
+
 // Parámetros públicos (i18n / textos)
 router.get('/paramPublic/:paramCode/:language', publicController.getPublicParams);
 

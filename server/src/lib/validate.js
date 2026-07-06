@@ -50,9 +50,19 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Contraseña requerida'),
 });
 
+// Imagen: URL http(s) o data-URL base64 comprimida (máx ~1.5MB)
+const imageSchema = z
+  .string()
+  .max(1_500_000, 'La imagen es demasiado grande')
+  .refine(
+    (v) => /^https?:\/\//i.test(v) || /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(v),
+    'Imagen inválida'
+  );
+
 const pageCreateSchema = z.object({
   title: z.string().trim().min(1, 'Título requerido').max(60),
   bio: z.string().trim().max(300).optional().default(''),
+  avatar_url: imageSchema.optional().nullable().or(z.literal('')),
   theme: z.record(z.any()).nullable().optional(),
   slug: slugSchema.optional(),
 });
@@ -60,6 +70,7 @@ const pageCreateSchema = z.object({
 const pageUpdateSchema = z.object({
   title: z.string().trim().min(1).max(60).optional(),
   bio: z.string().trim().max(300).optional(),
+  avatar_url: imageSchema.optional().nullable().or(z.literal('')),
   theme: z.record(z.any()).nullable().optional(),
   slug: slugSchema.optional(),
 });
@@ -86,15 +97,6 @@ const reorderSchema = z.object({
     .min(1)
     .max(200),
 });
-
-// Imagen: URL http(s) o data-URL base64 comprimida (máx ~1.5MB)
-const imageSchema = z
-  .string()
-  .max(1_500_000, 'La imagen es demasiado grande')
-  .refine(
-    (v) => /^https?:\/\//i.test(v) || /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(v),
-    'Imagen inválida'
-  );
 
 const menuItemSchema = z.object({
   page_id: z.coerce.number().int().positive(),

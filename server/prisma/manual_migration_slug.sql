@@ -22,6 +22,9 @@ ALTER TABLE menus
   ADD CONSTRAINT menus_page_id_fkey
   FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE;
 
+-- 2b. pages: avatar propio por página
+ALTER TABLE pages ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
 -- 3. users: campos de verificación de email
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token TEXT;
@@ -39,6 +42,16 @@ CREATE TABLE IF NOT EXISTS password_resets (
   used_at TIMESTAMP(3),
   created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 5. stat_events: analítica de visitas y clicks
+CREATE TABLE IF NOT EXISTS stat_events (
+  id SERIAL PRIMARY KEY,
+  page_id INTEGER NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
+  link_id INTEGER,
+  type TEXT NOT NULL,
+  created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS stat_events_page_id_created_at_idx ON stat_events(page_id, created_at);
 
 COMMIT;
 

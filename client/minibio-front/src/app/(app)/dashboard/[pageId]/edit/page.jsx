@@ -36,7 +36,24 @@ export default function EditPage(props) {
   const [pageTheme, setPageTheme] = useState(DEFAULT_THEME); // key de preset o 'custom'
   const [customFrom, setCustomFrom] = useState('#3b82f6');
   const [customTo, setCustomTo] = useState('#ec4899');
+  const [pageAvatar, setPageAvatar] = useState(''); // data-URL o URL
+  const [compressingAvatar, setCompressingAvatar] = useState(false);
   const [savingPage, setSavingPage] = useState(false);
+
+  const handleAvatarFile = async (file) => {
+    if (!file) return;
+    setError('');
+    setCompressingAvatar(true);
+    try {
+      // Avatar chico: 400px alcanza y pesa poco
+      const dataUrl = await compressImage(file, 400, 0.75);
+      setPageAvatar(dataUrl);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCompressingAvatar(false);
+    }
+  };
 
   // Menú
   const [menuName, setMenuName] = useState('');
@@ -81,6 +98,7 @@ export default function EditPage(props) {
       setPageTitle(data.title || '');
       setPageBio(data.bio || '');
       setPageSlug(data.slug || '');
+      setPageAvatar(data.avatar_url || '');
       if (data.theme?.from && data.theme?.to) {
         setPageTheme('custom');
         setCustomFrom(data.theme.from);
@@ -123,6 +141,7 @@ export default function EditPage(props) {
           title: pageTitle,
           bio: pageBio,
           slug: pageSlug || undefined,
+          avatar_url: pageAvatar || '',
           theme:
             pageTheme === 'custom'
               ? { from: customFrom, to: customTo }
@@ -384,6 +403,46 @@ export default function EditPage(props) {
         <Card variant="glass" padding="large" className="mb-8 p-5">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Configuración de la página</h2>
           <div className="text-gray-700 space-y-4">
+            {/* Foto de perfil de la página */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Foto de perfil (opcional)
+              </label>
+              <div className="flex items-center gap-4">
+                {pageAvatar ? (
+                  <img
+                    src={pageAvatar}
+                    alt="Foto de perfil"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow">
+                    {(pageTitle || '?').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  <label className="px-4 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors text-sm font-medium text-center">
+                    {compressingAvatar ? 'Optimizando…' : pageAvatar ? 'Cambiar foto' : 'Subir foto'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleAvatarFile(e.target.files?.[0])}
+                    />
+                  </label>
+                  {pageAvatar && (
+                    <button
+                      type="button"
+                      onClick={() => setPageAvatar('')}
+                      className="text-sm text-red-600 hover:underline"
+                    >
+                      Quitar foto
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <Input
               value={pageTitle}
               onChange={(e) => setPageTitle(e.target.value)}

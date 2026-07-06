@@ -34,11 +34,13 @@ model Page {
   title      String?
   slug       String   @unique
   bio        String?
+  avatar_url String?
   theme      Json?
   created_at DateTime @default(now())
   links      Link[]
   orders     Order[]
   menus      Menu[]
+  events     StatEvent[]
 
   @@map("pages")
 }
@@ -102,6 +104,19 @@ model MinibioParam {
   created_at   DateTime  @default(now())
 
   @@map("minibio_param")
+}
+
+// Eventos de analítica: visitas a páginas y clicks en links
+model StatEvent {
+  id         Int      @id @default(autoincrement())
+  page_id    Int
+  page       Page     @relation(fields: [page_id], references: [id], onDelete: Cascade)
+  link_id    Int?
+  type       String // 'view' | 'click'
+  created_at DateTime @default(now())
+
+  @@index([page_id, created_at])
+  @@map("stat_events")
 }
 
 model PasswordReset {
