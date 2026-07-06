@@ -35,6 +35,8 @@ model Page {
   slug       String   @unique
   bio        String?
   avatar_url String?
+  whatsapp   String? // número para el botón destacado (solo dígitos)
+  hours      Json? // horarios: { mon: {open,close,closed}, ... }
   theme      Json?
   created_at DateTime @default(now())
   links      Link[]
@@ -79,6 +81,7 @@ model Menu {
   page                Page      @relation(fields: [page_id], references: [id], onDelete: Cascade)
   product_name        String?
   product_description String?
+  category            String? // categoría del menú: "Cafés", "Promos", etc.
   image               String?
   items               Json? // [{itemId, name, qty, price}]
   price               Decimal?  @db.Decimal(10, 2)

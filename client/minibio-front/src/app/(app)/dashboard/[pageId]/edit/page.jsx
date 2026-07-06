@@ -9,6 +9,7 @@ import Card from '@/components/Card';
 import Input from '@/components/Input';
 import { THEMES, DEFAULT_THEME, randomGradient } from '@/lib/themes';
 import { compressImage } from '@/lib/image';
+import { DAY_KEYS, DAY_NAMES } from '@/lib/hours';
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar';
 
@@ -37,6 +38,9 @@ export default function EditPage(props) {
   const [customFrom, setCustomFrom] = useState('#3b82f6');
   const [customTo, setCustomTo] = useState('#ec4899');
   const [pageAvatar, setPageAvatar] = useState(''); // data-URL o URL
+  const [pageWhatsapp, setPageWhatsapp] = useState('');
+  const [pageHours, setPageHours] = useState({}); // { mon: {closed, open, close}, ... }
+  const [showHours, setShowHours] = useState(false);
   const [compressingAvatar, setCompressingAvatar] = useState(false);
   const [savingPage, setSavingPage] = useState(false);
 
@@ -60,6 +64,7 @@ export default function EditPage(props) {
   const [menuDescription, setMenuDescription] = useState('');
   const [menuPrice, setMenuPrice] = useState('');
   const [menuImage, setMenuImage] = useState(''); // data-URL comprimida
+  const [menuCategory, setMenuCategory] = useState('');
   const [compressing, setCompressing] = useState(false);
   const [showMenuForm, setShowMenuForm] = useState(false);
 
@@ -99,6 +104,9 @@ export default function EditPage(props) {
       setPageBio(data.bio || '');
       setPageSlug(data.slug || '');
       setPageAvatar(data.avatar_url || '');
+      setPageWhatsapp(data.whatsapp || '');
+      setPageHours(data.hours || {});
+      setShowHours(Boolean(data.hours));
       if (data.theme?.from && data.theme?.to) {
         setPageTheme('custom');
         setCustomFrom(data.theme.from);
@@ -142,6 +150,8 @@ export default function EditPage(props) {
           bio: pageBio,
           slug: pageSlug || undefined,
           avatar_url: pageAvatar || '',
+          whatsapp: pageWhatsapp || '',
+          hours: showHours && Object.keys(pageHours).length > 0 ? pageHours : null,
           theme:
             pageTheme === 'custom'
               ? { from: customFrom, to: customTo }
@@ -276,6 +286,7 @@ export default function EditPage(props) {
           page_id: parseInt(pageId),
           product_name: menuName,
           product_description: menuDescription || null,
+          category: menuCategory || null,
           price: menuPrice === '' ? null : parseFloat(menuPrice),
           image: menuImage || null,
         },
@@ -285,6 +296,7 @@ export default function EditPage(props) {
       setMenuDescription('');
       setMenuPrice('');
       setMenuImage('');
+      setMenuCategory('');
       setShowMenuForm(false);
       showSuccess('Producto agregado al menú');
     } catch (err) {
@@ -472,6 +484,86 @@ export default function EditPage(props) {
                 <span className="text-gray-500 text-sm whitespace-nowrap">.{ROOT_DOMAIN}</span>
               </div>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                WhatsApp para pedidos (opcional)
+              </label>
+              <input
+                type="tel"
+                value={pageWhatsapp}
+                onChange={(e) => setPageWhatsapp(e.target.value)}
+                placeholder="+54 9 11 1234-5678"
+                className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Si lo cargás, tu página muestra un botón verde "Pedinos por WhatsApp". Con código de país (54 para Argentina).
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-gray-700">Horarios de atención (opcional)</label>
+                <button
+                  type="button"
+                  onClick={() => setShowHours(!showHours)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                    showHours ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  {showHours ? 'Mostrando horarios' : 'Sin horarios'}
+                </button>
+              </div>
+              {showHours && (
+                <div className="space-y-2 bg-gray-50 border border-gray-200 rounded-xl p-3">
+                  {DAY_KEYS.map((k) => {
+                    const d = pageHours[k] || {};
+                    const isOpen = !d.closed && (d.open || d.close);
+                    const setDay = (patch) =>
+                      setPageHours({ ...pageHours, [k]: { ...d, ...patch } });
+                    return (
+                      <div key={k} className="flex items-center gap-3 text-sm">
+                        <label className="flex items-center gap-2 w-28 flex-shrink-0 text-gray-700">
+                          <input
+                            type="checkbox"
+                            checked={isOpen}
+                            onChange={(e) =>
+                              e.target.checked
+                                ? setDay({ closed: false, open: d.open || '09:00', close: d.close || '18:00' })
+                                : setDay({ closed: true })
+                            }
+                            className="rounded"
+                          />
+                          {DAY_NAMES[k]}
+                        </label>
+                        {isOpen ? (
+                          <>
+                            <input
+                              type="time"
+                              value={d.open || '09:00'}
+                              onChange={(e) => setDay({ open: e.target.value })}
+                              className="px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded-lg"
+                            />
+                            <span className="text-gray-400">a</span>
+                            <input
+                              type="time"
+                              value={d.close || '18:00'}
+                              onChange={(e) => setDay({ close: e.target.value })}
+                              className="px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded-lg"
+                            />
+                          </>
+                        ) : (
+                          <span className="text-gray-400">Cerrado</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <p className="text-xs text-gray-400 pt-1">
+                    Tu página muestra "Abierto ahora / Cerrado" automáticamente. Los horarios que cruzan medianoche (ej: 20:00 a 02:00) también funcionan.
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Tema</label>
               <div className="flex gap-3 flex-wrap items-start">
@@ -707,6 +799,27 @@ export default function EditPage(props) {
                 placeholder="Con leche de avena opcional"
                 label="Descripción (opcional)"
               />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Categoría (opcional)
+                </label>
+                <input
+                  list="menu-categories"
+                  value={menuCategory}
+                  onChange={(e) => setMenuCategory(e.target.value)}
+                  placeholder="Ej: Cafés, Promos, Postres"
+                  maxLength={40}
+                  className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <datalist id="menu-categories">
+                  {[...new Set(menuItems.map((m) => m.category).filter(Boolean))].map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+                <p className="text-xs text-gray-400 mt-1">
+                  Los productos se agrupan por categoría en tu página pública.
+                </p>
+              </div>
               <Input
                 type="number"
                 value={menuPrice}
@@ -787,6 +900,11 @@ export default function EditPage(props) {
                     </h3>
                     {item.product_description && (
                       <p className="text-sm text-gray-500 truncate">{item.product_description}</p>
+                    )}
+                    {item.category && (
+                      <span className="inline-block mt-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-medium">
+                        {item.category}
+                      </span>
                     )}
                     {formatPrice(item.price) && (
                       <p className="text-sm font-semibold text-gray-700 mt-1">{formatPrice(item.price)}</p>

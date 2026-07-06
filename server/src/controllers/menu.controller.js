@@ -23,7 +23,7 @@ async function getOwnedMenuItem(menuId, userId) {
 // POST /api/menus
 // ========================================
 exports.createMenuItem = async (req, res) => {
-  const { page_id, product_name, product_description, image, price, status } = req.body;
+  const { page_id, product_name, product_description, category, image, price, status } = req.body;
   const userId = req.user.userId;
 
   try {
@@ -37,6 +37,7 @@ exports.createMenuItem = async (req, res) => {
         page_id: page.id,
         product_name,
         product_description: product_description || null,
+        category: category || null,
         image: image || null,
         price: price ?? null,
         status: status || 'active',
@@ -82,7 +83,7 @@ exports.getMenuByPage = async (req, res) => {
 // ========================================
 exports.updateMenuItem = async (req, res) => {
   const { id } = req.params;
-  const { product_name, product_description, image, price, status } = req.body;
+  const { product_name, product_description, category, image, price, status } = req.body;
   const userId = req.user.userId;
 
   try {
@@ -94,6 +95,7 @@ exports.updateMenuItem = async (req, res) => {
     const data = {};
     if (product_name !== undefined) data.product_name = product_name;
     if (product_description !== undefined) data.product_description = product_description;
+    if (category !== undefined) data.category = category || null;
     if (image !== undefined) data.image = image || null;
     if (price !== undefined) data.price = price;
     if (status !== undefined) data.status = status;

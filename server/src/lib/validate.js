@@ -59,10 +59,41 @@ const imageSchema = z
     'Imagen inválida'
   );
 
+// WhatsApp: acepta cualquier formato, guarda solo dígitos (8-15) o vacío
+const whatsappSchema = z
+  .string()
+  .trim()
+  .transform((v) => v.replace(/\D/g, ''))
+  .refine((v) => v === '' || (v.length >= 8 && v.length <= 15), 'Número de WhatsApp inválido');
+
+// Horarios: { mon: { closed, open: "HH:MM", close: "HH:MM" }, ... }
+const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+const dayHoursSchema = z
+  .object({
+    closed: z.boolean().optional(),
+    open: z.string().regex(timeRegex, 'Hora inválida').optional(),
+    close: z.string().regex(timeRegex, 'Hora inválida').optional(),
+  })
+  .optional();
+
+const hoursSchema = z
+  .object({
+    mon: dayHoursSchema,
+    tue: dayHoursSchema,
+    wed: dayHoursSchema,
+    thu: dayHoursSchema,
+    fri: dayHoursSchema,
+    sat: dayHoursSchema,
+    sun: dayHoursSchema,
+  })
+  .nullable();
+
 const pageCreateSchema = z.object({
   title: z.string().trim().min(1, 'Título requerido').max(60),
   bio: z.string().trim().max(300).optional().default(''),
   avatar_url: imageSchema.optional().nullable().or(z.literal('')),
+  whatsapp: whatsappSchema.optional(),
+  hours: hoursSchema.optional(),
   theme: z.record(z.any()).nullable().optional(),
   slug: slugSchema.optional(),
 });
@@ -71,6 +102,8 @@ const pageUpdateSchema = z.object({
   title: z.string().trim().min(1).max(60).optional(),
   bio: z.string().trim().max(300).optional(),
   avatar_url: imageSchema.optional().nullable().or(z.literal('')),
+  whatsapp: whatsappSchema.optional(),
+  hours: hoursSchema.optional(),
   theme: z.record(z.any()).nullable().optional(),
   slug: slugSchema.optional(),
 });
@@ -102,6 +135,7 @@ const menuItemSchema = z.object({
   page_id: z.coerce.number().int().positive(),
   product_name: z.string().trim().min(1, 'Nombre requerido').max(80),
   product_description: z.string().trim().max(300).optional().nullable(),
+  category: z.string().trim().max(40).optional().nullable().or(z.literal('')),
   image: imageSchema.optional().nullable().or(z.literal('')),
   price: z.coerce.number().min(0).max(99999999).optional().nullable(),
   status: z.enum(['active', 'inactive']).optional(),
