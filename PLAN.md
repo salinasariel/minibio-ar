@@ -1,5 +1,7 @@
 # MiniBio.ar — Análisis y Plan de MVP
 
+> **Estado (2026-07-05):** Fases 0, 1 y 2 implementadas (slug único, seguridad/validación, CRUD de menú, temas, editor completo, verificación de email + reset de contraseña integrados). Pendiente de tu lado: correr `server/prisma/manual_migration_slug.sql` en la DB, `npx prisma generate`, y probar el flujo end-to-end. Fase 3 (deploy) sin empezar.
+
 **Alcance acordado:** link-in-bio + menú digital · slug único por página · deploy Vercel + Railway/Neon · gratis al inicio.
 
 ---
