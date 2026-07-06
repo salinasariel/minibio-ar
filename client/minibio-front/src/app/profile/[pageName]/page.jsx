@@ -288,9 +288,13 @@ export default function PublicProfilePage() {
             title="Compartir"
             className="w-14 h-14 bg-white/20 backdrop-blur-md border-2 border-white/30 rounded-2xl flex items-center justify-center text-white hover:bg-white/30 hover:scale-110 transition-all"
           >
-            {/* Icono compartir */}
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342a3 3 0 100-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684zm0-12a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684z" />
+            {/* Icono compartir (share-nodes) */}
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <circle cx="18" cy="5" r="2.5" />
+              <circle cx="6" cy="12" r="2.5" />
+              <circle cx="18" cy="19" r="2.5" />
+              <line x1="8.2" y1="10.8" x2="15.8" y2="6.2" strokeLinecap="round" />
+              <line x1="8.2" y1="13.2" x2="15.8" y2="17.8" strokeLinecap="round" />
             </svg>
           </button>
         </div>

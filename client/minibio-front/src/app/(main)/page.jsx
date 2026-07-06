@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Sparkles, Zap, TrendingUp, ArrowRight, CheckCircle, Globe, Share2 } from 'lucide-react';
+import { Sparkles, ArrowRight, CheckCircle, Globe, Share2, QrCode, BarChart3, UtensilsCrossed, Palette, Mail } from 'lucide-react';
 
 export default function MiniBioLanding() {
   const [scrollY, setScrollY] = useState(0);
@@ -15,19 +15,18 @@ export default function MiniBioLanding() {
   }, []);
 
   const features = [
-    { icon: Globe, title: 'Presencia Digital', desc: 'Tu (mini) link-in-bio en minutos' },
-    { icon: Share2, title: 'Facil de compartir', desc: 'Un solo enlace para todo' },
-    { icon: TrendingUp, title: 'Hacé crecer tu negocio', desc: 'Soluciones sin complicaciones' }
+    { icon: Globe, title: 'Tu página con tu nombre', desc: 'tunegocio.minibio.ar con todos tus links en un solo lugar' },
+    { icon: UtensilsCrossed, title: 'Menú con fotos y precios', desc: 'Cargá tus productos o tu carta, con fotos que se ven en grande' },
+    { icon: BarChart3, title: 'Estadísticas', desc: 'Visitas, clicks por link y actividad de los últimos días' }
   ];
 
   const benefits = [
-    'Listo rápido',
-    'Personaliza tu diseño',
-    'Catalogo de productos',
-    'Cartas para restaurantes',
-    'Reservas para tu negocio',
-    'Actualizá tu contenido cuando quieras',
-    'Planes profesionales accesibles'
+    'Tu dirección propia: elegís el nombre de tu página',
+    'Links ordenables arrastrando, con contador de clicks',
+    'Menú o catálogo con fotos, precios y descripciones',
+    'Foto de perfil y colores a tu gusto (o al azar, si te da igual)',
+    'Código QR listo para imprimir y botón de compartir por WhatsApp',
+    'Estadísticas de visitas y clicks de todas tus páginas',
   ];
 
   return (
@@ -67,21 +66,30 @@ export default function MiniBioLanding() {
           <div className="max-w-4xl mx-auto text-center">
             <div className={`transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
               <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
-                Tu Marca Personal
+                Todos tus links
                 <span className="block bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                  en un Solo Link
+                  en una sola página
                 </span>
               </h1>
-              <p className="text-xl md:text-2xl text-purple-200 mb-12 max-w-2xl mx-auto">
-                La plataforma perfecta para emprendedores que quieren destacar online. Creá tu perfil profesional y compartí todo lo que haces.
+              <p className="text-xl md:text-2xl text-purple-200 mb-6 max-w-2xl mx-auto">
+                Armá tu página con tus links, tu menú o catálogo, y compartila con un link o un QR. Pensado para emprendedores y negocios de acá.
               </p>
-              <a
-                href="https://app.minibio.ar/register"
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full text-lg font-semibold text-gray-900 hover:scale-105 transform transition-all duration-300 shadow-2xl hover:shadow-pink-500/50"
-              >
-                Comenzar Gratis
-                <ArrowRight className="animate-pulse" />
-              </a>
+
+              {/* Aviso gratuito */}
+              <div className="inline-flex items-center gap-2 px-5 py-2 mb-10 bg-green-500/20 border border-green-400/40 rounded-full text-green-300 text-sm font-medium">
+                <CheckCircle className="w-4 h-4" />
+                100% gratuito mientras está en desarrollo
+              </div>
+
+              <div>
+                <a
+                  href="https://app.minibio.ar/register"
+                  className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full text-lg font-semibold text-gray-900 hover:scale-105 transform transition-all duration-300 shadow-2xl hover:shadow-pink-500/50"
+                >
+                  Crear mi página
+                  <ArrowRight className="animate-pulse" />
+                </a>
+              </div>
             </div>
 
             {/* Floating Cards */}
@@ -110,11 +118,11 @@ export default function MiniBioLanding() {
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Todo lo que Necesitas para
-                <span className="block text-yellow-400">Crecer Online</span>
+                Qué podés hacer
+                <span className="block text-yellow-400">con MiniBio</span>
               </h2>
               <p className="text-xl text-purple-200">
-                Diseñado especialmente para emprendedores
+                Sin vueltas: lo que ves es lo que hay, y se actualiza seguido
               </p>
             </div>
 
@@ -133,23 +141,48 @@ export default function MiniBioLanding() {
         </div>
       </div>
 
-      {/* CTA Section */}
+      {/* QR + Share highlight */}
       <div className="relative py-20">
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
-            <Zap className="w-16 h-16 text-yellow-400 mx-auto mb-6 animate-bounce" />
+            <div className="flex items-center justify-center gap-6 mb-6">
+              <QrCode className="w-14 h-14 text-yellow-400" />
+              <Share2 className="w-14 h-14 text-pink-400" />
+            </div>
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              ¿Listo para Impulsar tu Marca?
+              Compartila como quieras
             </h2>
-            <p className="text-xl text-purple-200 mb-10">
-              La hacemos facil, para que te preocupes de lo importante.
+            <p className="text-xl text-purple-200 mb-10 max-w-2xl mx-auto">
+              Cada página tiene su código QR para descargar e imprimir, y un botón para mandarla por WhatsApp o la app que uses. Ideal para la mesa del local o la bio de Instagram.
             </p>
             <a
               href="https://app.minibio.ar/register"
               className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full text-xl font-semibold text-gray-900 hover:scale-105 transform transition-all duration-300 shadow-2xl hover:shadow-pink-500/50"
             >
-              Comenzar Ahora
+              Empezar ahora, es gratis
               <ArrowRight className="animate-pulse" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Sugerencias / Feedback */}
+      <div className="relative py-20 bg-black/20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-3xl mx-auto text-center p-10 bg-white/5 backdrop-blur-lg rounded-3xl border border-white/10">
+            <Mail className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              ¿Se te ocurre algo para mejorar?
+            </h2>
+            <p className="text-lg text-purple-200 mb-8">
+              MiniBio está en pleno desarrollo y las mejores ideas vienen de quienes lo usan. Si encontraste un error o te gustaría que agreguemos algo, escribinos y lo leemos.
+            </p>
+            <a
+              href="mailto:minibioarg@gmail.com?subject=Sugerencia%20para%20MiniBio"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-white/10 border border-white/20 rounded-full text-lg font-semibold hover:bg-white/20 transition-all duration-300 hover:scale-105"
+            >
+              <Mail className="w-5 h-5" />
+              minibioarg@gmail.com
             </a>
           </div>
         </div>
@@ -164,8 +197,14 @@ export default function MiniBioLanding() {
               MiniBio.ar
             </span>
           </div>
+          <p className="text-purple-200 mb-2">
+            Gratuito durante el desarrollo · Sugerencias:{' '}
+            <a href="mailto:minibioarg@gmail.com" className="font-semibold text-gray-200 hover:underline">
+              minibioarg@gmail.com
+            </a>
+          </p>
           <p className="text-purple-200">
-            © 2025 MiniBio.ar - Consulta nuestros <Link href="/terms" className="font-semibold text-gray-200 hover:text-black-700 hover:underline">términos y condiciones</Link>
+            © 2026 MiniBio.ar · <Link href="/terms" className="font-semibold text-gray-200 hover:underline">Términos y condiciones</Link>
           </p>
         </div>
       </footer>
