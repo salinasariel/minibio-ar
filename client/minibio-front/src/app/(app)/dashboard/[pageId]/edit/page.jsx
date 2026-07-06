@@ -7,7 +7,8 @@ import Link from 'next/link';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
 import Input from '@/components/Input';
-import { THEMES, DEFAULT_THEME } from '@/lib/themes';
+import { THEMES, DEFAULT_THEME, randomGradient } from '@/lib/themes';
+import { compressImage } from '@/lib/image';
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar';
 
@@ -32,15 +33,32 @@ export default function EditPage(props) {
   const [pageTitle, setPageTitle] = useState('');
   const [pageBio, setPageBio] = useState('');
   const [pageSlug, setPageSlug] = useState('');
-  const [pageTheme, setPageTheme] = useState(DEFAULT_THEME);
+  const [pageTheme, setPageTheme] = useState(DEFAULT_THEME); // key de preset o 'custom'
+  const [customFrom, setCustomFrom] = useState('#3b82f6');
+  const [customTo, setCustomTo] = useState('#ec4899');
   const [savingPage, setSavingPage] = useState(false);
 
   // Menú
   const [menuName, setMenuName] = useState('');
   const [menuDescription, setMenuDescription] = useState('');
   const [menuPrice, setMenuPrice] = useState('');
-  const [menuImage, setMenuImage] = useState('');
+  const [menuImage, setMenuImage] = useState(''); // data-URL comprimida
+  const [compressing, setCompressing] = useState(false);
   const [showMenuForm, setShowMenuForm] = useState(false);
+
+  const handleImageFile = async (file) => {
+    if (!file) return;
+    setError('');
+    setCompressing(true);
+    try {
+      const dataUrl = await compressImage(file); // máx 800px, JPEG ~72%
+      setMenuImage(dataUrl);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCompressing(false);
+    }
+  };
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -63,7 +81,13 @@ export default function EditPage(props) {
       setPageTitle(data.title || '');
       setPageBio(data.bio || '');
       setPageSlug(data.slug || '');
-      setPageTheme(data.theme?.preset || DEFAULT_THEME);
+      if (data.theme?.from && data.theme?.to) {
+        setPageTheme('custom');
+        setCustomFrom(data.theme.from);
+        setCustomTo(data.theme.to);
+      } else {
+        setPageTheme(data.theme?.preset || DEFAULT_THEME);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -99,7 +123,10 @@ export default function EditPage(props) {
           title: pageTitle,
           bio: pageBio,
           slug: pageSlug || undefined,
-          theme: { preset: pageTheme },
+          theme:
+            pageTheme === 'custom'
+              ? { from: customFrom, to: customTo }
+              : { preset: pageTheme },
         },
       });
       setPage({ ...page, ...updated });
@@ -371,7 +398,7 @@ export default function EditPage(props) {
                 placeholder="Contale al mundo de qué se trata tu página"
                 rows={2}
                 maxLength={300}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -381,20 +408,20 @@ export default function EditPage(props) {
                   value={pageSlug}
                   onChange={(e) => setPageSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
                   placeholder="mi-negocio"
-                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 px-4 py-3 bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 <span className="text-gray-500 text-sm whitespace-nowrap">.{ROOT_DOMAIN}</span>
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Tema</label>
-              <div className="flex gap-3 flex-wrap">
+              <div className="flex gap-3 flex-wrap items-start">
                 {Object.entries(THEMES).map(([key, t]) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setPageTheme(key)}
-                    className={`flex flex-col items-center gap-1 focus:outline-none`}
+                    className="flex flex-col items-center gap-1 focus:outline-none"
                     title={t.name}
                   >
                     <span
@@ -406,7 +433,69 @@ export default function EditPage(props) {
                     <span className="text-xs text-gray-600">{t.name}</span>
                   </button>
                 ))}
+
+                {/* Degradado personalizado */}
+                <button
+                  type="button"
+                  onClick={() => setPageTheme('custom')}
+                  className="flex flex-col items-center gap-1 focus:outline-none"
+                  title="Personalizado"
+                >
+                  <span
+                    className={`w-12 h-12 rounded-full border-4 transition-all ${
+                      pageTheme === 'custom' ? 'border-blue-600 scale-110' : 'border-white'
+                    }`}
+                    style={{ background: `linear-gradient(135deg, ${customFrom}, ${customTo})` }}
+                  ></span>
+                  <span className="text-xs text-gray-600">Personalizado</span>
+                </button>
+
+                {/* Random */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const g = randomGradient();
+                    setCustomFrom(g.from);
+                    setCustomTo(g.to);
+                    setPageTheme('custom');
+                  }}
+                  className="flex flex-col items-center gap-1 focus:outline-none"
+                  title="Degradado aleatorio"
+                >
+                  <span className="w-12 h-12 rounded-full border-4 border-white bg-gray-100 flex items-center justify-center text-xl">
+                    🎲
+                  </span>
+                  <span className="text-xs text-gray-600">Random</span>
+                </button>
               </div>
+
+              {pageTheme === 'custom' && (
+                <div className="mt-3 flex items-center gap-4 flex-wrap">
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    Color inicial
+                    <input
+                      type="color"
+                      value={customFrom}
+                      onChange={(e) => setCustomFrom(e.target.value)}
+                      className="w-10 h-10 rounded cursor-pointer border border-gray-200"
+                    />
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    Color final
+                    <input
+                      type="color"
+                      value={customTo}
+                      onChange={(e) => setCustomTo(e.target.value)}
+                      className="w-10 h-10 rounded cursor-pointer border border-gray-200"
+                    />
+                  </label>
+                  <div
+                    className="h-10 flex-1 min-w-32 rounded-xl border border-gray-200"
+                    style={{ background: `linear-gradient(135deg, ${customFrom}, ${customTo})` }}
+                    title="Vista previa"
+                  ></div>
+                </div>
+              )}
             </div>
             <Button onClick={handleSavePage} variant="primary" fullWidth loading={savingPage}>
               Guardar cambios
@@ -566,13 +655,41 @@ export default function EditPage(props) {
                 placeholder="2500"
                 label="Precio en ARS (opcional)"
               />
-              <Input
-                type="url"
-                value={menuImage}
-                onChange={(e) => setMenuImage(e.target.value)}
-                placeholder="https://... (URL de imagen, opcional)"
-                label="Imagen (opcional)"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Foto del producto (opcional)
+                </label>
+                <div className="flex items-center gap-4">
+                  <label className="px-4 py-3 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors text-sm font-medium">
+                    {compressing ? 'Optimizando…' : menuImage ? 'Cambiar foto' : 'Subir foto'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleImageFile(e.target.files?.[0])}
+                    />
+                  </label>
+                  {menuImage && (
+                    <>
+                      <img
+                        src={menuImage}
+                        alt="Vista previa"
+                        className="w-16 h-16 rounded-xl object-cover border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setMenuImage('')}
+                        className="text-sm text-red-600 hover:underline"
+                      >
+                        Quitar
+                      </button>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Se comprime automáticamente para que tu página cargue rápido.
+                </p>
+              </div>
               <div className="flex gap-3">
                 <Button onClick={handleAddMenuItem} variant="primary" fullWidth>
                   Agregar

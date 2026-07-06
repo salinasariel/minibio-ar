@@ -1,5 +1,7 @@
-// Temas predefinidos para las páginas públicas.
-// Se guardan en page.theme como { preset: "ocean" }.
+// Temas de las páginas públicas.
+// page.theme puede ser:
+//   { preset: "ocean" }                  → tema predefinido
+//   { from: "#3b82f6", to: "#ec4899" }   → degradado personalizado de 2 colores
 
 export const THEMES = {
   ocean: {
@@ -26,7 +28,38 @@ export const THEMES = {
 
 export const DEFAULT_THEME = 'ocean';
 
-export function getTheme(theme) {
-  const preset = theme?.preset;
-  return THEMES[preset] || THEMES[DEFAULT_THEME];
+const HEX = /^#[0-9a-fA-F]{6}$/;
+
+// Devuelve { className, style } para aplicar al fondo de la página pública
+export function getThemeView(theme) {
+  if (theme?.from && theme?.to && HEX.test(theme.from) && HEX.test(theme.to)) {
+    return {
+      className: '',
+      style: { background: `linear-gradient(135deg, ${theme.from}, ${theme.to})` },
+    };
+  }
+  const preset = THEMES[theme?.preset] || THEMES[DEFAULT_THEME];
+  return { className: preset.background, style: undefined };
+}
+
+function hslToHex(h, s, l) {
+  s /= 100;
+  l /= 100;
+  const k = (n) => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n) => {
+    const c = l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+    return Math.round(255 * c).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+// Par de colores aleatorio que combina (tonos separados 40-140°, saturados)
+export function randomGradient() {
+  const h1 = Math.floor(Math.random() * 360);
+  const h2 = (h1 + 40 + Math.floor(Math.random() * 100)) % 360;
+  return {
+    from: hslToHex(h1, 70 + Math.floor(Math.random() * 20), 45 + Math.floor(Math.random() * 15)),
+    to: hslToHex(h2, 70 + Math.floor(Math.random() * 20), 40 + Math.floor(Math.random() * 15)),
+  };
 }

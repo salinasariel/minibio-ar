@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useParams } from "next/navigation";
-import { getTheme } from '@/lib/themes';
+import { getThemeView } from '@/lib/themes';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -13,6 +13,7 @@ export default function PublicProfilePage() {
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lightbox, setLightbox] = useState(null); // { src, alt } | null
 
   useEffect(() => {
     if (!pageName) return;
@@ -46,7 +47,7 @@ export default function PublicProfilePage() {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  const theme = getTheme(profile?.theme);
+  const themeView = getThemeView(profile?.theme);
   const displayName = profile?.display_name || profile?.title || profile?.username || '';
   const initial = (displayName || '?').charAt(0).toUpperCase();
 
@@ -61,7 +62,10 @@ export default function PublicProfilePage() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme.background}`}>
+      <div
+        className={`min-h-screen flex items-center justify-center ${themeView.className}`}
+        style={themeView.style}
+      >
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white font-semibold">Cargando...</p>
@@ -88,7 +92,10 @@ export default function PublicProfilePage() {
   }
 
   return (
-    <div className={`min-h-screen ${theme.background} relative overflow-hidden`}>
+    <div
+      className={`min-h-screen ${themeView.className} relative overflow-hidden`}
+      style={themeView.style}
+    >
       {/* Animated background blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
@@ -167,11 +174,18 @@ export default function PublicProfilePage() {
                   style={{ animationDelay: `${index * 0.08}s` }}
                 >
                   {item.image && (
-                    <img
-                      src={item.image}
-                      alt={item.product_name || ''}
-                      className="w-20 h-20 rounded-xl object-cover border-2 border-white/30 flex-shrink-0"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setLightbox({ src: item.image, alt: item.product_name || '' })}
+                      className="flex-shrink-0 focus:outline-none"
+                      title="Ver foto"
+                    >
+                      <img
+                        src={item.image}
+                        alt={item.product_name || ''}
+                        className="w-20 h-20 rounded-xl object-cover border-2 border-white/30 cursor-zoom-in hover:scale-105 transition-transform"
+                      />
+                    </button>
                   )}
                   <div className="flex-1 min-w-0 text-left">
                     <h3 className="text-white font-bold text-lg truncate">
@@ -210,6 +224,32 @@ export default function PublicProfilePage() {
           </a>
         </div>
       </div>
+
+      {/* Lightbox: foto ampliada */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setLightbox(null)}
+        >
+          <div className="max-w-3xl max-h-[85vh] flex flex-col items-center gap-3">
+            <img
+              src={lightbox.src}
+              alt={lightbox.alt}
+              className="max-w-full max-h-[75vh] rounded-2xl object-contain shadow-2xl"
+            />
+            {lightbox.alt && (
+              <p className="text-white font-semibold text-lg drop-shadow">{lightbox.alt}</p>
+            )}
+            <button
+              type="button"
+              onClick={() => setLightbox(null)}
+              className="px-5 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-white text-sm font-medium hover:bg-white/30"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes fade-in {

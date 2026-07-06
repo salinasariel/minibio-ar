@@ -87,11 +87,20 @@ const reorderSchema = z.object({
     .max(200),
 });
 
+// Imagen: URL http(s) o data-URL base64 comprimida (máx ~1.5MB)
+const imageSchema = z
+  .string()
+  .max(1_500_000, 'La imagen es demasiado grande')
+  .refine(
+    (v) => /^https?:\/\//i.test(v) || /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(v),
+    'Imagen inválida'
+  );
+
 const menuItemSchema = z.object({
   page_id: z.coerce.number().int().positive(),
   product_name: z.string().trim().min(1, 'Nombre requerido').max(80),
   product_description: z.string().trim().max(300).optional().nullable(),
-  image: urlSchema.optional().nullable().or(z.literal('')),
+  image: imageSchema.optional().nullable().or(z.literal('')),
   price: z.coerce.number().min(0).max(99999999).optional().nullable(),
   status: z.enum(['active', 'inactive']).optional(),
 });

@@ -50,8 +50,9 @@ app.use(
   )
 );
 
-app.use(express.json({ limit: '100kb' }));
-app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+// 2mb: las imágenes del menú viajan como data-URL base64 comprimidas en el cliente
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 // Rate limiting general
 app.use(
