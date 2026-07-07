@@ -56,6 +56,10 @@ ALTER TABLE menus ADD COLUMN IF NOT EXISTS category TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_enabled BOOLEAN NOT NULL DEFAULT false;
 UPDATE users SET ai_enabled = true WHERE email = 'minibioarg@gmail.com';
 
+-- 4d. Admin: flag solo asignable por DB
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false;
+UPDATE users SET is_admin = true WHERE email = 'minibioarg@gmail.com';
+
 -- 5. stat_events: analítica de visitas y clicks
 CREATE TABLE IF NOT EXISTS stat_events (
   id SERIAL PRIMARY KEY,

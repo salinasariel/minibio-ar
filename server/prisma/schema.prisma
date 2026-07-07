@@ -19,6 +19,7 @@ model User {
   avatar_url    String?
   email_verified Boolean  @default(false)
   ai_enabled     Boolean  @default(false) // habilita el asistente IA (beta)
+  is_admin       Boolean  @default(false) // panel admin; solo se asigna por DB
   verification_token String?
   token_expires  DateTime?
   created_at    DateTime @default(now())
