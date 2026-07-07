@@ -1,7 +1,47 @@
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle, Globe, Share2, QrCode, BarChart3, UtensilsCrossed, Mail } from 'lucide-react';
+
+// Ejemplos que rotan en el mockup del teléfono
+const EXAMPLES = [
+  {
+    name: 'Café Aurora',
+    subtitle: 'Café de especialidad · Palermo',
+    initial: 'C',
+    gradient: 'linear-gradient(160deg, #b45309, #451a03)',
+    accent: '#b45309',
+    links: ['Nuestra carta', 'Pedinos por WhatsApp', 'Instagram'],
+    btnClass: 'rounded-xl bg-white/20 border border-white/30',
+  },
+  {
+    name: 'Barbería Roma',
+    subtitle: 'Cortes y barba · Rosario',
+    initial: 'B',
+    gradient: 'linear-gradient(160deg, #1f2937, #030712)',
+    accent: '#1f2937',
+    links: ['Turnos por WhatsApp', 'Instagram', 'Cómo llegar'],
+    btnClass: 'rounded-lg bg-transparent border-2 border-white/70',
+  },
+  {
+    name: 'La Canchita F5',
+    subtitle: 'Fútbol 5 · Córdoba',
+    initial: 'L',
+    gradient: 'linear-gradient(160deg, #16a34a, #14532d)',
+    accent: '#16a34a',
+    links: ['Reservá tu cancha', 'WhatsApp', 'Cómo llegar'],
+    btnClass: 'rounded-full bg-white/20 border border-white/30',
+  },
+  {
+    name: 'Dulce Lola',
+    subtitle: 'Pastelería artesanal · Mendoza',
+    initial: 'D',
+    gradient: 'linear-gradient(160deg, #db2777, #831843)',
+    accent: '#db2777',
+    links: ['Catálogo con precios', 'Pedidos por WhatsApp', 'Instagram'],
+    btnClass: 'rounded-2xl bg-white/25 border border-white/30',
+  },
+];
 
 const features = [
   { icon: Globe, title: 'Tu página con tu nombre', desc: 'tunegocio.minibio.ar con todos tus links en un solo lugar' },
@@ -18,6 +58,17 @@ const benefits = [
 ];
 
 export default function MiniBioLanding() {
+  const [example, setExample] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setExample((e) => (e + 1) % EXAMPLES.length);
+    }, 3500);
+    return () => clearInterval(t);
+  }, []);
+
+  const current = EXAMPLES[example];
+
   return (
     <div className="min-h-screen bg-[#fafaf8] text-gray-900 antialiased">
       {/* Nav */}
@@ -54,7 +105,9 @@ export default function MiniBioLanding() {
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] mb-6">
               Todos tus links
               <br />
-              <span className="text-indigo-600">en una sola página</span>
+              <span className="transition-colors duration-700" style={{ color: current.accent }}>
+                en una sola página
+              </span>
             </h1>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-8 max-w-md">
               Armá tu página con tus links, tu menú o catálogo, y compartila con un link o un QR. Pensado para emprendedores y negocios.
@@ -76,32 +129,58 @@ export default function MiniBioLanding() {
             </div>
           </div>
 
-          {/* Mockup de teléfono */}
-          <div className="hidden md:flex justify-center">
+          {/* Mockup de teléfono con ejemplos rotativos */}
+          <div className="hidden md:flex flex-col items-center gap-5">
             <div className="w-[290px] rounded-[2.4rem] border-[10px] border-gray-900 bg-gray-900 shadow-xl rotate-2">
-              <div className="rounded-[1.8rem] overflow-hidden bg-gradient-to-b from-indigo-500 to-violet-600 px-5 pt-10 pb-8">
-                <div className="w-16 h-16 mx-auto rounded-full bg-white/25 border-2 border-white/50 flex items-center justify-center text-2xl font-bold text-white mb-3">
-                  L
-                </div>
-                <p className="text-center text-white font-bold mb-1">Palermo Coffe</p>
-                <p className="text-center text-white/80 text-xs mb-5">Café de especialidad · Buenos Aires</p>
-                {['Nuestra carta', 'Pedinos por WhatsApp', 'Instagram'].map((t) => (
+              <div className="relative rounded-[1.8rem] overflow-hidden h-[430px]">
+                {EXAMPLES.map((ex, i) => (
                   <div
-                    key={t}
-                    className="bg-white/20 border border-white/30 rounded-xl text-center text-white text-sm font-medium py-3 mb-2.5"
+                    key={ex.name}
+                    className={`absolute inset-0 px-5 pt-10 pb-8 transition-opacity duration-700 ${
+                      i === example ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                    }`}
+                    style={{ background: ex.gradient }}
                   >
-                    {t}
+                    <div className="w-16 h-16 mx-auto rounded-full bg-white/25 border-2 border-white/50 flex items-center justify-center text-2xl font-bold text-white mb-3">
+                      {ex.initial}
+                    </div>
+                    <p className="text-center text-white font-bold mb-1">{ex.name}</p>
+                    <p className="text-center text-white/80 text-xs mb-5">{ex.subtitle}</p>
+                    {ex.links.map((t) => (
+                      <div
+                        key={t}
+                        className={`${ex.btnClass} text-center text-white text-sm font-medium py-3 mb-2.5`}
+                      >
+                        {t}
+                      </div>
+                    ))}
+                    <div className="flex justify-center gap-3 mt-5">
+                      <div className="w-9 h-9 bg-white/20 border border-white/30 rounded-lg flex items-center justify-center">
+                        <QrCode className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="w-9 h-9 bg-white/20 border border-white/30 rounded-lg flex items-center justify-center">
+                        <Share2 className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
                   </div>
                 ))}
-                <div className="flex justify-center gap-3 mt-5">
-                  <div className="w-9 h-9 bg-white/20 border border-white/30 rounded-lg flex items-center justify-center">
-                    <QrCode className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="w-9 h-9 bg-white/20 border border-white/30 rounded-lg flex items-center justify-center">
-                    <Share2 className="w-4 h-4 text-white" />
-                  </div>
-                </div>
               </div>
+            </div>
+
+            {/* Indicadores */}
+            <div className="flex gap-2">
+              {EXAMPLES.map((ex, i) => (
+                <button
+                  key={ex.name}
+                  onClick={() => setExample(i)}
+                  aria-label={`Ver ejemplo: ${ex.name}`}
+                  className="w-2 h-2 rounded-full transition-all duration-500"
+                  style={{
+                    backgroundColor: i === example ? current.accent : '#d1d5db',
+                    transform: i === example ? 'scale(1.4)' : 'scale(1)',
+                  }}
+                ></button>
+              ))}
             </div>
           </div>
         </div>
