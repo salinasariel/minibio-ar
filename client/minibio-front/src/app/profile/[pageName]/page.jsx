@@ -198,8 +198,8 @@ export default function PublicProfilePage() {
     >
       {/* Animated background blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 hidden"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/10 hidden" style={{ animationDelay: '1s' }}></div>
       </div>
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-12">
@@ -408,7 +408,7 @@ export default function PublicProfilePage() {
         {/* Datos de pago */}
         {(profile.payment_alias || profile.payment_link) && (
           <div className="mb-8 p-5 bg-white/20 backdrop-blur-md rounded-2xl border-2 border-white/30 text-center">
-            <p className="text-white font-bold text-lg mb-3">💸 Formas de pago</p>
+            <p className="text-white font-bold text-lg mb-3">Formas de pago</p>
             {profile.payment_alias && (
               <button
                 type="button"
@@ -446,7 +446,12 @@ export default function PublicProfilePage() {
             rel="noopener noreferrer"
             className="block w-full p-4 mb-8 bg-white/20 backdrop-blur-md rounded-2xl border-2 border-white/30 text-white font-semibold text-center hover:bg-white/30 transition-all hover:scale-105"
           >
-            ⭐ Dejanos tu reseña en Google
+            <span className="inline-flex items-center justify-center gap-2">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+              </svg>
+              Dejanos tu reseña en Google
+            </span>
           </a>
         )}
 

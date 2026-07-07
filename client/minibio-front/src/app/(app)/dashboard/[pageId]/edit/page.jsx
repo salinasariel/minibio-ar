@@ -10,16 +10,17 @@ import Input from '@/components/Input';
 import { THEMES, DEFAULT_THEME, randomGradient } from '@/lib/themes';
 import { compressImage, extractColors } from '@/lib/image';
 import { DAY_KEYS, DAY_NAMES } from '@/lib/hours';
+import { MessageCircle, MapPin, Landmark, Star, Clock, Sparkles, Shuffle } from 'lucide-react';
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar';
 
 // Secciones opcionales de la página, agregables con "+"
 const SECTION_DEFS = [
-  { key: 'whatsapp', emoji: '💬', label: 'WhatsApp', desc: 'Botón verde para que te escriban directo' },
-  { key: 'address', emoji: '📍', label: 'Ubicación', desc: 'Dirección con link a Google Maps' },
-  { key: 'payment', emoji: '💸', label: 'Datos de pago', desc: 'Alias/CVU para transferencias y link de MercadoPago' },
-  { key: 'reviews', emoji: '⭐', label: 'Reseñas de Google', desc: 'Botón para que te dejen reseñas' },
-  { key: 'hours', emoji: '🕐', label: 'Horarios', desc: 'Abierto/cerrado automático según tu horario' },
+  { key: 'whatsapp', icon: MessageCircle, label: 'WhatsApp', desc: 'Botón verde para que te escriban directo' },
+  { key: 'address', icon: MapPin, label: 'Ubicación', desc: 'Dirección con link a Google Maps' },
+  { key: 'payment', icon: Landmark, label: 'Datos de pago', desc: 'Alias/CVU para transferencias y link de MercadoPago' },
+  { key: 'reviews', icon: Star, label: 'Reseñas de Google', desc: 'Botón para que te dejen reseñas' },
+  { key: 'hours', icon: Clock, label: 'Horarios', desc: 'Abierto/cerrado automático según tu horario' },
 ];
 
 export default function EditPage(props) {
@@ -173,7 +174,7 @@ export default function EditPage(props) {
       setAiProposal(null);
       setAiPrompt('');
       await fetchPage();
-      showSuccess('✨ Cambios de la IA aplicados');
+      showSuccess('Cambios de la IA aplicados');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -568,7 +569,7 @@ export default function EditPage(props) {
 
   if (loading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen flex items-center justify-center bg-[#fafaf8]">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
         </div>
@@ -577,9 +578,9 @@ export default function EditPage(props) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-[#fafaf8]">
       {/* Header */}
-      <div className="bg-white/70 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-2">
             <Link href="/dashboard" className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium flex-shrink-0 text-sm sm:text-base">
@@ -592,10 +593,10 @@ export default function EditPage(props) {
               {user?.ai_enabled && (
                 <button
                   onClick={() => setAiOpen(true)}
-                  className="px-3 py-2 text-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity whitespace-nowrap flex-shrink-0"
+                  className="px-3 py-2 text-sm bg-violet-600 text-white rounded-xl font-semibold hover:bg-violet-700 transition-colors whitespace-nowrap flex-shrink-0"
                   title="Asistente IA (beta)"
                 >
-                  ✨ IA
+                  <span className="inline-flex items-center gap-1.5"><Sparkles className="w-4 h-4" /> IA</span>
                 </button>
               )}
               <a
@@ -654,7 +655,7 @@ export default function EditPage(props) {
         )}
 
         {/* Pestañas */}
-        <div className="flex gap-1 mb-6 bg-white/60 backdrop-blur rounded-2xl p-1.5 border border-gray-200/60">
+        <div className="flex gap-1 mb-6 bg-white rounded-xl p-1.5 border border-gray-200">
           {[
             { key: 'pagina', label: 'Página' },
             { key: 'links', label: `Links (${links.length})` },
@@ -692,7 +693,7 @@ export default function EditPage(props) {
                     className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow">
+                  <div className="w-20 h-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-3xl font-bold">
                     {(pageTitle || '?').charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -752,7 +753,7 @@ export default function EditPage(props) {
             {sections.includes('whatsapp') && (
             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
               <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-semibold text-gray-800">💬 WhatsApp</label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-800"><MessageCircle className="w-4 h-4 text-gray-400" /> WhatsApp</label>
                 <button type="button" onClick={() => removeSection('whatsapp')} className="text-xs text-red-500 hover:underline">Quitar</button>
               </div>
               <input
@@ -771,7 +772,7 @@ export default function EditPage(props) {
             {sections.includes('address') && (
             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
               <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-semibold text-gray-800">📍 Ubicación</label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-800"><MapPin className="w-4 h-4 text-gray-400" /> Ubicación</label>
                 <button type="button" onClick={() => removeSection('address')} className="text-xs text-red-500 hover:underline">Quitar</button>
               </div>
               <input
@@ -791,7 +792,7 @@ export default function EditPage(props) {
             {sections.includes('payment') && (
             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
               <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-semibold text-gray-800">💸 Datos de pago</label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-800"><Landmark className="w-4 h-4 text-gray-400" /> Datos de pago</label>
                 <button type="button" onClick={() => removeSection('payment')} className="text-xs text-red-500 hover:underline">Quitar</button>
               </div>
               <div className="space-y-3">
@@ -827,7 +828,7 @@ export default function EditPage(props) {
             {sections.includes('reviews') && (
             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
               <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-semibold text-gray-800">⭐ Reseñas de Google</label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-800"><Star className="w-4 h-4 text-gray-400" /> Reseñas de Google</label>
                 <button type="button" onClick={() => removeSection('reviews')} className="text-xs text-red-500 hover:underline">Quitar</button>
               </div>
               <input
@@ -846,7 +847,7 @@ export default function EditPage(props) {
             {sections.includes('hours') && (
             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-semibold text-gray-800">🕐 Horarios de atención</label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-800"><Clock className="w-4 h-4 text-gray-400" /> Horarios de atención</label>
                 <button type="button" onClick={() => removeSection('hours')} className="text-xs text-red-500 hover:underline">Quitar</button>
               </div>
               {true && (
@@ -920,7 +921,7 @@ export default function EditPage(props) {
                       onClick={() => addSection(s.key)}
                       className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-blue-50 transition-colors"
                     >
-                      <span className="text-xl">{s.emoji}</span>
+                      <s.icon className="w-5 h-5 text-gray-500 flex-shrink-0" strokeWidth={1.8} />
                       <span>
                         <span className="block text-sm font-semibold text-gray-900">{s.label}</span>
                         <span className="block text-xs text-gray-500">{s.desc}</span>
@@ -981,8 +982,8 @@ export default function EditPage(props) {
                   className="flex flex-col items-center gap-1 focus:outline-none"
                   title="Degradado aleatorio"
                 >
-                  <span className="w-12 h-12 rounded-full border-4 border-white bg-gray-100 flex items-center justify-center text-xl">
-                    🎲
+                  <span className="w-12 h-12 rounded-full border-4 border-white bg-gray-900 flex items-center justify-center">
+                    <Shuffle className="w-5 h-5 text-white" strokeWidth={1.8} />
                   </span>
                   <span className="text-xs text-gray-600">Random</span>
                 </button>
@@ -996,11 +997,9 @@ export default function EditPage(props) {
                     title="Usar los colores de tu foto de perfil"
                   >
                     <span
-                      className="w-12 h-12 rounded-full border-4 border-white bg-cover bg-center flex items-center justify-center text-xl"
+                      className="w-12 h-12 rounded-full border-4 border-white bg-cover bg-center"
                       style={{ backgroundImage: `url(${pageAvatar})` }}
-                    >
-                      🎨
-                    </span>
+                    ></span>
                     <span className="text-xs text-gray-600">De tu foto</span>
                   </button>
                 )}
@@ -1380,7 +1379,7 @@ export default function EditPage(props) {
       {aiOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => !aiLoading && !aiApplying && setAiOpen(false)}>
           <div className="bg-white rounded-3xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-xl font-bold text-gray-900 mb-1">✨ Asistente IA <span className="text-xs font-semibold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full align-middle">beta</span></h3>
+            <h3 className="flex items-center gap-2 text-xl font-bold text-gray-900 mb-1"><Sparkles className="w-5 h-5 text-violet-600" /> Asistente IA <span className="text-xs font-semibold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">beta</span></h3>
             <p className="text-sm text-gray-500 mb-4">
               Contale qué querés para tu página: contenido, productos o estilo. Te muestra la propuesta antes de aplicar nada.
             </p>
@@ -1412,7 +1411,7 @@ export default function EditPage(props) {
                 <div className="border border-gray-200 rounded-xl divide-y divide-gray-100 text-sm mb-4">
                   {aiProposal.page.replace_all && (
                     <div className="p-3 bg-red-50 text-red-700 font-semibold">
-                      🔄 Rehacer de cero: se borran los {links.length} links y {menuItems.length} productos actuales
+                      Rehacer de cero: se borran los {links.length} links y {menuItems.length} productos actuales
                     </div>
                   )}
                   {!aiProposal.page.replace_all && (aiProposal.page.remove_link_ids || []).length > 0 && (
