@@ -20,6 +20,8 @@ model User {
   email_verified Boolean  @default(false)
   ai_enabled     Boolean  @default(false) // habilita el asistente IA (beta)
   is_admin       Boolean  @default(false) // panel admin; solo se asigna por DB
+  plan_id        Int?
+  plan           Plan?    @relation(fields: [plan_id], references: [id], onDelete: SetNull)
   verification_token String?
   token_expires  DateTime?
   created_at    DateTime @default(now())
@@ -126,6 +128,21 @@ model StatEvent {
 
   @@index([page_id, created_at])
   @@map("stat_events")
+}
+
+// Planes: qué funcionalidades y límites tiene cada cuenta
+model Plan {
+  id         Int      @id @default(autoincrement())
+  code       String   @unique // 'free', 'pro'
+  name       String
+  features   Json? // array de keys del catálogo: ["whatsapp","products",...]
+  max_pages  Int      @default(1)
+  max_links  Int      @default(10)
+  is_default Boolean  @default(false) // plan de las cuentas nuevas / sin plan
+  created_at DateTime @default(now())
+  users      User[]
+
+  @@map("plans")
 }
 
 model PasswordReset {

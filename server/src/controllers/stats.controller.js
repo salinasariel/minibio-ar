@@ -1,4 +1,5 @@
 const prisma = require('../models/db');
+const { getUserPlan, planHasFeature } = require('../lib/plan');
 
 // ========================================
 // ESTADÍSTICAS DE TODAS MIS PÁGINAS
@@ -8,6 +9,11 @@ exports.getMyStats = async (req, res) => {
   const userId = req.user.userId;
 
   try {
+    const plan = await getUserPlan(userId);
+    if (!planHasFeature(plan, 'stats')) {
+      return res.status(403).json({ error: `Tu plan (${plan.name}) no incluye estadísticas` });
+    }
+
     const pages = await prisma.page.findMany({
       where: { user_id: userId },
       include: {

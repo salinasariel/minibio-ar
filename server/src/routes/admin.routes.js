@@ -14,5 +14,7 @@ router.put('/users/:id', adminController.updateUser);
 router.delete('/users/:id', adminController.deleteUser);
 router.get('/users/:id/pages', adminController.listUserPages);
 router.delete('/pages/:id', adminController.deletePage);
+router.get('/plans', adminController.listPlans);
+router.put('/plans/:id', adminController.updatePlan);
 
 module.exports = router;

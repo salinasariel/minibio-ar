@@ -57,6 +57,11 @@ export default function EditPage(props) {
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [tab, setTab] = useState('pagina'); // 'pagina' | 'links' | 'productos'
 
+  // Features del plan: si no hay info de plan (sesión vieja), no ocultamos nada
+  // (el server igual bloquea lo que no corresponde)
+  const planFeatures = user?.plan?.features ?? null;
+  const hasFeature = (key) => !planFeatures || planFeatures.includes(key);
+
   // Asistente IA (beta)
   const [aiOpen, setAiOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
@@ -660,7 +665,7 @@ export default function EditPage(props) {
             { key: 'pagina', label: 'Página' },
             { key: 'links', label: `Links (${links.length})` },
             { key: 'productos', label: `Productos (${menuItems.length})` },
-          ].map((t) => (
+          ].filter((t) => t.key !== 'productos' || hasFeature('products')).map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
@@ -903,7 +908,7 @@ export default function EditPage(props) {
             )}
 
             {/* + Agregar sección */}
-            {SECTION_DEFS.filter((s) => !sections.includes(s.key)).length > 0 && (
+            {SECTION_DEFS.filter((s) => !sections.includes(s.key) && hasFeature(s.key)).length > 0 && (
             <div className="relative">
               <button
                 type="button"
@@ -914,7 +919,7 @@ export default function EditPage(props) {
               </button>
               {showAddMenu && (
                 <div className="absolute z-20 mt-2 w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
-                  {SECTION_DEFS.filter((s) => !sections.includes(s.key)).map((s) => (
+                  {SECTION_DEFS.filter((s) => !sections.includes(s.key) && hasFeature(s.key)).map((s) => (
                     <button
                       key={s.key}
                       type="button"
@@ -954,7 +959,9 @@ export default function EditPage(props) {
                   </button>
                 ))}
 
-                {/* Degradado personalizado */}
+                {/* Degradado personalizado (feature custom_theme) */}
+                {hasFeature('custom_theme') && (
+                <>
                 <button
                   type="button"
                   onClick={() => setPageTheme('custom')}
@@ -1002,6 +1009,8 @@ export default function EditPage(props) {
                     ></span>
                     <span className="text-xs text-gray-600">De tu foto</span>
                   </button>
+                )}
+                </>
                 )}
               </div>
 

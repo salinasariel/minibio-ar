@@ -1,5 +1,6 @@
 const prisma = require('../models/db');
 const { uniqueSlug } = require('../lib/slug');
+const { getUserPlan } = require('../lib/plan');
 
 // ========================================
 // CREAR NUEVA PÁGINA
@@ -9,6 +10,15 @@ exports.createPage = async (req, res) => {
   const userId = req.user.userId;
 
   try {
+    // Límite de páginas según el plan
+    const plan = await getUserPlan(userId);
+    const pageCount = await prisma.page.count({ where: { user_id: userId } });
+    if (pageCount >= plan.max_pages) {
+      return res.status(403).json({
+        error: `Tu plan (${plan.name}) permite hasta ${plan.max_pages} página${plan.max_pages !== 1 ? 's' : ''}`,
+      });
+    }
+
     const finalSlug = await uniqueSlug(slug || title);
 
     const newPage = await prisma.page.create({

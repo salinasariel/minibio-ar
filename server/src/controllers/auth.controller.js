@@ -2,6 +2,14 @@ const prisma = require('../models/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const { publicPlan, FALLBACK_PLAN } = require('../lib/plan');
+
+// Plan efectivo para la respuesta de auth (asignado o default)
+async function resolvePlan(user) {
+  if (user.plan) return user.plan;
+  const def = await prisma.plan.findFirst({ where: { is_default: true } }).catch(() => null);
+  return def || FALLBACK_PLAN;
+}
 
 const TOKEN_EXPIRY = '7d';
 
@@ -10,13 +18,14 @@ const signToken = (user) =>
     expiresIn: TOKEN_EXPIRY,
   });
 
-const publicUser = (user) => ({
+const publicUser = (user, plan) => ({
   id: user.id,
   email: user.email,
   username: user.username,
   display_name: user.display_name,
   ai_enabled: user.ai_enabled || false,
   is_admin: user.is_admin || false,
+  plan: publicPlan(plan),
 });
 
 const generateToken = (length = 32) => crypto.randomBytes(length).toString('hex');
@@ -107,10 +116,11 @@ exports.register = async (req, res) => {
 
     // Sin verificación: auto-login
     const token = signToken(user);
+    const plan = await resolvePlan(user);
     res.status(201).json({
       message: 'Usuario creado exitosamente',
       token,
-      user: publicUser(user),
+      user: publicUser(user, plan),
     });
   } catch (error) {
     if (error.code === 'P2002') {
@@ -128,7 +138,7 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email }, include: { plan: true } });
 
     // Respuesta genérica: no revelar si el email existe o no
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
@@ -143,11 +153,12 @@ exports.login = async (req, res) => {
     }
 
     const token = signToken(user);
+    const plan = await resolvePlan(user);
 
     res.status(200).json({
       message: 'Login exitoso',
       token,
-      user: publicUser(user),
+      user: publicUser(user, plan),
     });
   } catch (error) {
     console.error('login error:', error);

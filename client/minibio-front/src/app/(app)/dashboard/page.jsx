@@ -130,6 +130,7 @@ export default function DashboardPage() {
                   <span className="hidden sm:inline">Admin</span>
                 </Link>
               )}
+              {(!user.plan || user.plan.features?.includes('stats')) && (
               <Link
                 href="/dashboard/stats"
                 className="flex items-center gap-2 px-2.5 sm:px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-xl transition-all font-medium whitespace-nowrap"
@@ -140,6 +141,7 @@ export default function DashboardPage() {
                 </svg>
                 <span className="hidden sm:inline">Estadísticas</span>
               </Link>
+              )}
               <button
                 onClick={logout}
                 className="flex items-center gap-2 px-2.5 sm:px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-all whitespace-nowrap"

@@ -86,12 +86,14 @@ exports.generatePage = async (req, res) => {
   }
 
   try {
-    // Flag por usuario: solo cuentas con IA habilitada
+    // Acceso: flag personal (beta) o plan que incluya la feature 'ai'
+    const { getUserPlan, planHasFeature } = require('../lib/plan');
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { ai_enabled: true },
     });
-    if (!user?.ai_enabled) {
+    const plan = await getUserPlan(userId);
+    if (!user?.ai_enabled && !planHasFeature(plan, 'ai')) {
       return res.status(403).json({ error: 'El asistente IA no está habilitado para tu cuenta' });
     }
 

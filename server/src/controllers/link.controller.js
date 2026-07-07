@@ -1,4 +1,5 @@
 const prisma = require('../models/db');
+const { getUserPlan } = require('../lib/plan');
 
 // Helper: verifica que la página exista y pertenezca al usuario
 async function getOwnedPage(pageId, userId) {
@@ -18,6 +19,15 @@ exports.createLink = async (req, res) => {
     const page = await getOwnedPage(page_id, userId);
     if (!page) {
       return res.status(403).json({ error: 'No autorizado para modificar esta página' });
+    }
+
+    // Límite de links por página según el plan
+    const plan = await getUserPlan(userId);
+    const linkCount = await prisma.link.count({ where: { page_id: page.id } });
+    if (linkCount >= plan.max_links) {
+      return res.status(403).json({
+        error: `Tu plan (${plan.name}) permite hasta ${plan.max_links} links por página`,
+      });
     }
 
     const maxPosition = await prisma.link.findFirst({

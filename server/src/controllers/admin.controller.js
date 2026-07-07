@@ -1,5 +1,6 @@
 const prisma = require('../models/db');
 const bcrypt = require('bcryptjs');
+const { FEATURES, FEATURE_KEYS } = require('../lib/plan');
 
 // ========================================
 // LISTAR USUARIOS (con búsqueda y conteo de páginas)
@@ -28,6 +29,7 @@ exports.listUsers = async (req, res) => {
         ai_enabled: true,
         is_admin: true,
         created_at: true,
+        plan: { select: { id: true, code: true, name: true } },
         _count: { select: { pages: true } },
       },
       orderBy: { created_at: 'desc' },
@@ -79,7 +81,7 @@ exports.createUser = async (req, res) => {
 // ========================================
 exports.updateUser = async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const { display_name, email_verified, ai_enabled } = req.body;
+  const { display_name, email_verified, ai_enabled, plan_id } = req.body;
 
   if (Number.isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
 
@@ -89,12 +91,25 @@ exports.updateUser = async (req, res) => {
     if (typeof email_verified === 'boolean') data.email_verified = email_verified;
     if (typeof ai_enabled === 'boolean') data.ai_enabled = ai_enabled;
 
+    // Asignar / quitar plan (null = vuelve al default)
+    if (plan_id !== undefined) {
+      if (plan_id === null) {
+        data.plan_id = null;
+      } else {
+        const pid = parseInt(plan_id, 10);
+        const plan = await prisma.plan.findUnique({ where: { id: pid } });
+        if (!plan) return res.status(400).json({ error: 'Plan inexistente' });
+        data.plan_id = pid;
+      }
+    }
+
     const user = await prisma.user.update({
       where: { id },
       data,
       select: {
         id: true, email: true, username: true, display_name: true,
         email_verified: true, ai_enabled: true, is_admin: true, created_at: true,
+        plan: { select: { id: true, code: true, name: true } },
         _count: { select: { pages: true } },
       },
     });
@@ -159,6 +174,71 @@ exports.listUserPages = async (req, res) => {
   } catch (error) {
     console.error('admin listUserPages error:', error);
     res.status(500).json({ error: 'Error al listar páginas' });
+  }
+};
+
+// ========================================
+// PLANES: listar (con catálogo de features)
+// GET /api/admin/plans
+// ========================================
+exports.listPlans = async (req, res) => {
+  try {
+    const plans = await prisma.plan.findMany({
+      orderBy: { id: 'asc' },
+      include: { _count: { select: { users: true } } },
+    });
+    res.status(200).json({ plans, catalog: FEATURES });
+  } catch (error) {
+    console.error('admin listPlans error:', error);
+    res.status(500).json({ error: 'Error al listar planes' });
+  }
+};
+
+// ========================================
+// PLANES: modificar (nombre, features, límites)
+// PUT /api/admin/plans/:id
+// ========================================
+exports.updatePlan = async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { name, features, max_pages, max_links } = req.body;
+
+  if (Number.isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+
+  try {
+    const data = {};
+    if (name !== undefined) {
+      const n = String(name).trim().slice(0, 40);
+      if (!n) return res.status(400).json({ error: 'Nombre requerido' });
+      data.name = n;
+    }
+    if (features !== undefined) {
+      if (!Array.isArray(features) || features.some((f) => !FEATURE_KEYS.includes(f))) {
+        return res.status(400).json({ error: 'Features inválidas' });
+      }
+      data.features = features;
+    }
+    if (max_pages !== undefined) {
+      const v = parseInt(max_pages, 10);
+      if (Number.isNaN(v) || v < 1 || v > 100) return res.status(400).json({ error: 'max_pages inválido (1-100)' });
+      data.max_pages = v;
+    }
+    if (max_links !== undefined) {
+      const v = parseInt(max_links, 10);
+      if (Number.isNaN(v) || v < 1 || v > 500) return res.status(400).json({ error: 'max_links inválido (1-500)' });
+      data.max_links = v;
+    }
+
+    const plan = await prisma.plan.update({
+      where: { id },
+      data,
+      include: { _count: { select: { users: true } } },
+    });
+
+    res.status(200).json(plan);
+  } catch (error) {
+    if (error.code === 'P2025') return res.status(404).json({ error: 'Plan no encontrado' });
+    console.error('admin updatePlan error:', error);
+    res.status(500).json({ error: 'Error al modificar el plan' });
   }
 };
 

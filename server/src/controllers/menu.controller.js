@@ -1,4 +1,5 @@
 const prisma = require('../models/db');
+const { getUserPlan, planHasFeature } = require('../lib/plan');
 
 async function getOwnedPage(pageId, userId) {
   const id = parseInt(pageId, 10);
@@ -27,6 +28,11 @@ exports.createMenuItem = async (req, res) => {
   const userId = req.user.userId;
 
   try {
+    const plan = await getUserPlan(userId);
+    if (!planHasFeature(plan, 'products')) {
+      return res.status(403).json({ error: `Tu plan (${plan.name}) no incluye la sección de productos` });
+    }
+
     const page = await getOwnedPage(page_id, userId);
     if (!page) {
       return res.status(403).json({ error: 'No autorizado para modificar esta página' });

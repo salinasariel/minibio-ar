@@ -23,6 +23,71 @@ export default function AdminPage() {
   // Páginas expandidas por usuario: { [userId]: pages[] }
   const [expandedPages, setExpandedPages] = useState({});
 
+  // Planes
+  const [plans, setPlans] = useState([]);
+  const [catalog, setCatalog] = useState([]);
+  const [showPlans, setShowPlans] = useState(false);
+  const [savingPlan, setSavingPlan] = useState(null);
+
+  const fetchPlans = async () => {
+    try {
+      const data = await apiFetch('/admin/plans', token);
+      setPlans(data.plans);
+      setCatalog(data.catalog);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const togglePlanFeature = (planId, key) => {
+    setPlans(plans.map((p) => {
+      if (p.id !== planId) return p;
+      const features = Array.isArray(p.features) ? p.features : [];
+      return {
+        ...p,
+        features: features.includes(key) ? features.filter((f) => f !== key) : [...features, key],
+      };
+    }));
+  };
+
+  const setPlanLimit = (planId, field, value) => {
+    setPlans(plans.map((p) => (p.id === planId ? { ...p, [field]: value } : p)));
+  };
+
+  const savePlan = async (p) => {
+    setSavingPlan(p.id);
+    try {
+      const updated = await apiFetch(`/admin/plans/${p.id}`, token, {
+        method: 'PUT',
+        body: {
+          name: p.name,
+          features: Array.isArray(p.features) ? p.features : [],
+          max_pages: parseInt(p.max_pages, 10),
+          max_links: parseInt(p.max_links, 10),
+        },
+      });
+      setPlans(plans.map((x) => (x.id === p.id ? updated : x)));
+      showSuccess(`Plan "${updated.name}" guardado`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingPlan(null);
+    }
+  };
+
+  const changeUserPlan = async (u, planId) => {
+    try {
+      const updated = await apiFetch(`/admin/users/${u.id}`, token, {
+        method: 'PUT',
+        body: { plan_id: planId === '' ? null : parseInt(planId, 10) },
+      });
+      setUsers(users.map((x) => (x.id === u.id ? updated : x)));
+      showSuccess('Plan actualizado');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   // Alta de usuario
   const [showCreate, setShowCreate] = useState(false);
   const [newEmail, setNewEmail] = useState('');
@@ -55,7 +120,10 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (user?.is_admin) fetchUsers();
+    if (user?.is_admin) {
+      fetchUsers();
+      fetchPlans();
+    }
   }, [token, user]);
 
   // Búsqueda con debounce simple
@@ -178,6 +246,85 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Planes */}
+        <Card className="border border-gray-200 mb-6">
+          <button
+            onClick={() => setShowPlans(!showPlans)}
+            className="w-full p-4 flex items-center justify-between text-left"
+          >
+            <div>
+              <h2 className="font-bold text-gray-900">Planes</h2>
+              <p className="text-sm text-gray-500">
+                {plans.map((p) => `${p.name} (${p._count?.users ?? 0})`).join(' · ') || 'Cargando…'}
+              </p>
+            </div>
+            <span className="text-gray-400 text-sm">{showPlans ? 'Ocultar' : 'Editar'}</span>
+          </button>
+
+          {showPlans && (
+            <div className="border-t border-gray-100 p-4 grid md:grid-cols-2 gap-4">
+              {plans.map((p) => (
+                <div key={p.id} className="border border-gray-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <input
+                      value={p.name}
+                      onChange={(e) => setPlanLimit(p.id, 'name', e.target.value)}
+                      className="font-bold text-gray-900 bg-transparent border-b border-dashed border-gray-300 focus:outline-none focus:border-blue-500 w-32"
+                    />
+                    <span className="text-xs text-gray-400">
+                      {p.code}{p.is_default ? ' · default' : ''} · {p._count?.users ?? 0} usuario{(p._count?.users ?? 0) !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 mb-3">
+                    {catalog.map((f) => {
+                      const active = Array.isArray(p.features) && p.features.includes(f.key);
+                      return (
+                        <label key={f.key} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={active}
+                            onChange={() => togglePlanFeature(p.id, f.key)}
+                            className="rounded"
+                          />
+                          {f.name}
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center gap-3 mb-3 text-sm text-gray-700">
+                    <label className="flex items-center gap-1.5">
+                      Páginas
+                      <input
+                        type="number"
+                        min={1}
+                        value={p.max_pages}
+                        onChange={(e) => setPlanLimit(p.id, 'max_pages', e.target.value)}
+                        className="w-16 px-2 py-1 bg-gray-50 border border-gray-200 rounded-lg text-gray-900"
+                      />
+                    </label>
+                    <label className="flex items-center gap-1.5">
+                      Links/pág.
+                      <input
+                        type="number"
+                        min={1}
+                        value={p.max_links}
+                        onChange={(e) => setPlanLimit(p.id, 'max_links', e.target.value)}
+                        className="w-16 px-2 py-1 bg-gray-50 border border-gray-200 rounded-lg text-gray-900"
+                      />
+                    </label>
+                  </div>
+
+                  <Button onClick={() => savePlan(p)} variant="primary" size="small" loading={savingPlan === p.id}>
+                    Guardar plan
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
         {/* Búsqueda */}
         <div className="mb-6">
           <Input
@@ -223,6 +370,17 @@ export default function AdminPage() {
                     </div>
 
                     <div className="flex items-center gap-1 flex-wrap">
+                      <select
+                        value={u.plan?.id ?? ''}
+                        onChange={(e) => changeUserPlan(u, e.target.value)}
+                        className="px-2 py-1.5 text-xs font-medium bg-gray-50 border border-gray-200 rounded-lg text-gray-700"
+                        title="Plan del usuario"
+                      >
+                        <option value="">(default)</option>
+                        {plans.map((p) => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
                       <button
                         onClick={() => togglePages(u)}
                         className="px-2.5 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg"

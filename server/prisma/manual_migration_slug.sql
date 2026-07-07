@@ -60,6 +60,24 @@ UPDATE users SET ai_enabled = true WHERE email = 'minibioarg@gmail.com';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false;
 UPDATE users SET is_admin = true WHERE email = 'minibioarg@gmail.com';
 
+-- 4e. Planes
+CREATE TABLE IF NOT EXISTS plans (
+  id SERIAL PRIMARY KEY,
+  code TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  features JSONB,
+  max_pages INTEGER NOT NULL DEFAULT 1,
+  max_links INTEGER NOT NULL DEFAULT 10,
+  is_default BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_id INTEGER REFERENCES plans(id) ON DELETE SET NULL;
+
+INSERT INTO plans (code, name, features, max_pages, max_links, is_default) VALUES
+  ('free', 'Gratis', '["whatsapp","address","hours","products","stats"]', 2, 10, true),
+  ('pro', 'Pro', '["whatsapp","address","hours","products","stats","payment","reviews","custom_theme","ai"]', 5, 50, false)
+ON CONFLICT (code) DO NOTHING;
+
 -- 5. stat_events: analítica de visitas y clicks
 CREATE TABLE IF NOT EXISTS stat_events (
   id SERIAL PRIMARY KEY,
