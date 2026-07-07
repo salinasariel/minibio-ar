@@ -267,6 +267,81 @@ export default function MiniBioLanding() {
         </div>
       </section>
 
+      {/* Planes */}
+      <section className="max-w-6xl mx-auto px-6 py-20 md:py-24">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">Planes</h2>
+          <p className="text-gray-600 text-lg max-w-xl mx-auto">
+            Arrancás gratis. Y el Pro no se paga: se consigue invitando.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {/* Gratis */}
+          <div className="border border-gray-200 rounded-2xl bg-white p-7 flex flex-col">
+            <h3 className="text-xl font-bold mb-1">Gratis</h3>
+            <p className="text-gray-500 text-sm mb-6">Todo lo que necesitás para arrancar</p>
+            <ul className="space-y-2.5 text-gray-700 mb-8 flex-1">
+              {[
+                'Hasta 2 páginas',
+                'Hasta 10 links por página',
+                'Productos con fotos y precios',
+                'Botón de WhatsApp',
+                'Ubicación y horarios',
+                'Estadísticas de visitas y clicks',
+                'Código QR y compartir',
+              ].map((b) => (
+                <li key={b} className="flex items-start gap-2.5">
+                  <CheckCircle className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              href="https://app.minibio.ar/register"
+              className="block text-center px-6 py-3 border border-gray-300 rounded-xl font-semibold text-gray-800 hover:border-gray-900 hover:bg-gray-50 transition-colors"
+            >
+              Crear mi página
+            </a>
+          </div>
+
+          {/* Pro */}
+          <div className="border-2 border-indigo-600 rounded-2xl bg-white p-7 flex flex-col relative">
+            <span className="absolute -top-3 left-6 px-3 py-0.5 bg-indigo-600 text-white text-xs font-semibold rounded-full">
+              Se gana invitando
+            </span>
+            <h3 className="text-xl font-bold mb-1">Pro</h3>
+            <p className="text-gray-500 text-sm mb-6">Todo lo del plan Gratis, más</p>
+            <ul className="space-y-2.5 text-gray-700 mb-8 flex-1">
+              {[
+                'Hasta 5 páginas',
+                'Hasta 50 links por página',
+                'Datos de pago: alias y MercadoPago',
+                'Botón de reseñas de Google',
+                'Colores y estilos personalizados',
+                'Asistente IA para armar tu página',
+              ].map((b) => (
+                <li key={b} className="flex items-start gap-2.5">
+                  <CheckCircle className="w-4 h-4 text-indigo-600 mt-1 flex-shrink-0" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-4 text-sm text-indigo-900">
+              <strong>¿Cómo lo consigo?</strong> Invitá a alguien con tu link de referido.
+              Cuando su página empiece a recibir clicks, el Pro es tuyo — y se mantiene
+              mientras tu referido siga activo.
+            </div>
+            <a
+              href="https://app.minibio.ar/register"
+              className="block text-center px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
+            >
+              Empezar e invitar
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Sugerencias */}
       <section className="max-w-3xl mx-auto px-6 py-20 md:py-24 text-center">
         <Mail className="w-8 h-8 text-indigo-600 mx-auto mb-4" strokeWidth={1.8} />

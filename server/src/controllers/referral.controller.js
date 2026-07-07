@@ -23,7 +23,12 @@ exports.getMyReferrals = async (req, res) => {
         maintain_clicks_30d: MAINTAIN_CLICKS_30D,
       },
       rewarded, // true = tiene Pro por referidos ahora mismo
-      referrals,
+      // Privacidad: no exponemos los clicks del referido, solo su estado
+      referrals: referrals.map((r) => ({
+        username: r.username,
+        created_at: r.created_at,
+        status: r.active ? 'active' : r.qualifies ? 'idle' : 'pending',
+      })),
     });
   } catch (error) {
     console.error('getMyReferrals error:', error);

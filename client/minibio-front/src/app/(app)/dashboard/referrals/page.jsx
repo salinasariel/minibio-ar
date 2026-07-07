@@ -142,24 +142,23 @@ export default function ReferralsPage() {
                       <div>
                         <p className="font-semibold text-gray-900">@{r.username}</p>
                         <p className="text-xs text-gray-400">
-                          Se sumó el {new Date(r.created_at).toLocaleDateString('es-AR')} ·{' '}
-                          {r.total_clicks} clicks totales · {r.clicks_30d} en 30 días
+                          Se sumó el {new Date(r.created_at).toLocaleDateString('es-AR')}
                         </p>
                       </div>
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          r.active
+                          r.status === 'active'
                             ? 'bg-green-100 text-green-700'
-                            : r.qualifies
+                            : r.status === 'idle'
                               ? 'bg-amber-100 text-amber-700'
                               : 'bg-gray-100 text-gray-500'
                         }`}
                       >
-                        {r.active
+                        {r.status === 'active'
                           ? 'Activo'
-                          : r.qualifies
+                          : r.status === 'idle'
                             ? 'Sin actividad reciente'
-                            : `Le faltan ${Math.max(0, data.rules.qualify_clicks - r.total_clicks)} clicks`}
+                            : 'Aún no califica'}
                       </span>
                     </div>
                   </Card>
