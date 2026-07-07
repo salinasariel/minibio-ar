@@ -56,9 +56,14 @@ export default function RegisterPage() {
         setLoading(true);
 
         try {
+            // Código de referido (si llegó con ?ref= en la URL)
+            const ref = typeof window !== 'undefined'
+                ? new URLSearchParams(window.location.search).get('ref')
+                : null;
+
             const data = await apiFetch('/auth/register', null, {
                 method: 'POST',
-                body: { email, password, username },
+                body: { email, password, username, ...(ref ? { ref } : {}) },
             });
 
             if (data?.token) {

@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [impersonating, setImpersonating] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -20,6 +21,7 @@ export function AuthProvider({ children }) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
+    setImpersonating(Boolean(localStorage.getItem('admin_backup')));
     setLoading(false);
   }, []);
 
@@ -56,7 +58,35 @@ export function AuthProvider({ children }) {
     setUser(null);
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('user_data');
+    localStorage.removeItem('admin_backup');
+    setImpersonating(false);
     router.push('/login');
+  };
+
+  // Modo demo: respaldar la sesión del admin y entrar como el usuario
+  const startImpersonation = (data) => {
+    localStorage.setItem(
+      'admin_backup',
+      JSON.stringify({ token: localStorage.getItem('jwt_token'), user: localStorage.getItem('user_data') })
+    );
+    saveSession(data);
+    setImpersonating(true);
+    router.push('/dashboard');
+  };
+
+  // Volver a la cuenta de admin
+  const stopImpersonation = () => {
+    const backup = localStorage.getItem('admin_backup');
+    if (backup) {
+      const { token: t, user: u } = JSON.parse(backup);
+      localStorage.setItem('jwt_token', t);
+      localStorage.setItem('user_data', u);
+      setToken(t);
+      setUser(JSON.parse(u));
+    }
+    localStorage.removeItem('admin_backup');
+    setImpersonating(false);
+    router.push('/admin');
   };
 
   const value = {
@@ -66,9 +96,29 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
+    impersonating,
+    startImpersonation,
+    stopImpersonation,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {impersonating && user && (
+        <div className="fixed bottom-0 inset-x-0 z-[100] bg-amber-400 text-amber-950 px-4 py-2.5 flex items-center justify-center gap-3 text-sm font-medium shadow-lg">
+          <span>
+            Modo demo: estás viendo la cuenta de <strong>@{user.username}</strong>
+          </span>
+          <button
+            onClick={stopImpersonation}
+            className="px-3 py-1 bg-amber-950 text-amber-50 rounded-lg font-semibold hover:bg-amber-900 transition-colors"
+          >
+            Volver a mi cuenta
+          </button>
+        </div>
+      )}
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export const useAuth = () => {

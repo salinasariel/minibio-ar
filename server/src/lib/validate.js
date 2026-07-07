@@ -38,6 +38,7 @@ const registerSchema = z.object({
     .max(30)
     .regex(/^[a-z0-9_-]+$/, 'Username: solo letras, números, guiones y guión bajo'),
   display_name: z.string().trim().max(60).optional(),
+  ref: z.string().trim().max(30).optional(), // código de referido (opcional)
 });
 
 const resetPasswordSchema = z.object({

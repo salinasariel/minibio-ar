@@ -82,12 +82,24 @@ async function sendPasswordResetEmail(email, token) {
 // Sin SMTP (dev): auto-verifica y devuelve token (auto-login).
 // ========================================
 exports.register = async (req, res) => {
-  const { email, password, username, display_name } = req.body;
+  const { email, password, username, display_name, ref } = req.body;
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const requiresVerification = smtpConfigured();
     const verificationToken = requiresVerification ? generateToken() : null;
+
+    // Referido: buscar al dueño del código (si es válido y no es el mismo email)
+    let referredBy = null;
+    if (ref) {
+      const referrer = await prisma.user.findUnique({
+        where: { referral_code: ref },
+        select: { id: true, email: true },
+      });
+      if (referrer && referrer.email !== email) {
+        referredBy = referrer.id;
+      }
+    }
 
     const user = await prisma.user.create({
       data: {
@@ -100,6 +112,7 @@ exports.register = async (req, res) => {
         token_expires: requiresVerification
           ? new Date(Date.now() + 24 * 60 * 60 * 1000)
           : null,
+        referred_by: referredBy,
       },
     });
 
@@ -153,12 +166,23 @@ exports.login = async (req, res) => {
     }
 
     const token = signToken(user);
-    const plan = await resolvePlan(user);
+
+    // Referidos: re-evaluar el premio Pro al iniciar sesión
+    try {
+      const { evaluateReferralReward } = require('../lib/referrals');
+      await evaluateReferralReward(user.id);
+    } catch (e) {
+      console.error('referral eval on login:', e.message);
+    }
+
+    // Releer con el plan por si la evaluación lo cambió
+    const fresh = await prisma.user.findUnique({ where: { id: user.id }, include: { plan: true } });
+    const plan = await resolvePlan(fresh);
 
     res.status(200).json({
       message: 'Login exitoso',
       token,
-      user: publicUser(user, plan),
+      user: publicUser(fresh, plan),
     });
   } catch (error) {
     console.error('login error:', error);

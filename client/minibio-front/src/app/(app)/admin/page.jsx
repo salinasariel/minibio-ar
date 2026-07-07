@@ -11,7 +11,7 @@ import Input from '@/components/Input';
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar';
 
 export default function AdminPage() {
-  const { user, token, loading } = useAuth();
+  const { user, token, loading, startImpersonation } = useAuth();
   const router = useRouter();
 
   const [users, setUsers] = useState([]);
@@ -72,6 +72,16 @@ export default function AdminPage() {
       setError(err.message);
     } finally {
       setSavingPlan(null);
+    }
+  };
+
+  // Modo demo: entrar como el usuario
+  const handleImpersonate = async (u) => {
+    try {
+      const data = await apiFetch(`/admin/users/${u.id}/impersonate`, token, { method: 'POST' });
+      startImpersonation(data);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -387,6 +397,15 @@ export default function AdminPage() {
                       >
                         {expandedPages[u.id] ? 'Ocultar páginas' : 'Ver páginas'}
                       </button>
+                      {!u.is_admin && (
+                        <button
+                          onClick={() => handleImpersonate(u)}
+                          className="px-2.5 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50 rounded-lg"
+                          title="Entrar a la app como este usuario (modo demo)"
+                        >
+                          Entrar como
+                        </button>
+                      )}
                       <button
                         onClick={() => toggleFlag(u, 'email_verified')}
                         className="px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg"

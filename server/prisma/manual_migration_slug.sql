@@ -78,6 +78,13 @@ INSERT INTO plans (code, name, features, max_pages, max_links, is_default) VALUE
   ('pro', 'Pro', '["whatsapp","address","hours","products","stats","payment","reviews","custom_theme","ai"]', 5, 50, false)
 ON CONFLICT (code) DO NOTHING;
 
+-- 4f. Referidos
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by INTEGER;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS pro_by_referral BOOLEAN NOT NULL DEFAULT false;
+CREATE UNIQUE INDEX IF NOT EXISTS users_referral_code_key ON users(referral_code) WHERE referral_code IS NOT NULL;
+CREATE INDEX IF NOT EXISTS users_referred_by_idx ON users(referred_by);
+
 -- 5. stat_events: analítica de visitas y clicks
 CREATE TABLE IF NOT EXISTS stat_events (
   id SERIAL PRIMARY KEY,

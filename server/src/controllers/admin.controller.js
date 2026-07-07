@@ -1,6 +1,7 @@
 const prisma = require('../models/db');
 const bcrypt = require('bcryptjs');
-const { FEATURES, FEATURE_KEYS } = require('../lib/plan');
+const jwt = require('jsonwebtoken');
+const { FEATURES, FEATURE_KEYS, publicPlan, FALLBACK_PLAN } = require('../lib/plan');
 
 // ========================================
 // LISTAR USUARIOS (con búsqueda y conteo de páginas)
@@ -174,6 +175,55 @@ exports.listUserPages = async (req, res) => {
   } catch (error) {
     console.error('admin listUserPages error:', error);
     res.status(500).json({ error: 'Error al listar páginas' });
+  }
+};
+
+// ========================================
+// MODO DEMO: entrar como un usuario
+// POST /api/admin/users/:id/impersonate
+// Devuelve un token de 1h del usuario objetivo (con auditoría en el JWT).
+// ========================================
+exports.impersonateUser = async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+
+  try {
+    const target = await prisma.user.findUnique({
+      where: { id },
+      include: { plan: true },
+    });
+
+    if (!target) return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (target.is_admin && target.id !== req.user.userId) {
+      return res.status(400).json({ error: 'No se puede entrar como otro admin' });
+    }
+
+    // Token corto, con marca de quién impersona (queda en logs y en el JWT)
+    const token = jwt.sign(
+      { userId: target.id, email: target.email, impersonated_by: req.user.userId },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    console.log(`[demo] admin ${req.user.userId} entró como usuario ${target.id} (${target.email})`);
+
+    const plan = target.plan || (await prisma.plan.findFirst({ where: { is_default: true } })) || FALLBACK_PLAN;
+
+    res.status(200).json({
+      token,
+      user: {
+        id: target.id,
+        email: target.email,
+        username: target.username,
+        display_name: target.display_name,
+        ai_enabled: target.ai_enabled || false,
+        is_admin: false, // en modo demo nunca se hereda el rol admin
+        plan: publicPlan(plan),
+      },
+    });
+  } catch (error) {
+    console.error('admin impersonateUser error:', error);
+    res.status(500).json({ error: 'Error al iniciar el modo demo' });
   }
 };
 

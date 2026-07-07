@@ -22,6 +22,9 @@ model User {
   is_admin       Boolean  @default(false) // panel admin; solo se asigna por DB
   plan_id        Int?
   plan           Plan?    @relation(fields: [plan_id], references: [id], onDelete: SetNull)
+  referral_code  String?  @unique // código para invitar (link de referido)
+  referred_by    Int? // id del usuario que lo refirió
+  pro_by_referral Boolean @default(false) // el plan Pro vino del programa de referidos
   verification_token String?
   token_expires  DateTime?
   created_at    DateTime @default(now())
