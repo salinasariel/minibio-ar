@@ -581,18 +581,18 @@ export default function EditPage(props) {
       {/* Header */}
       <div className="bg-white/70 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/dashboard" className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center justify-between gap-2">
+            <Link href="/dashboard" className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium flex-shrink-0 text-sm sm:text-base">
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Dashboard
+              <span className="hidden sm:inline">Dashboard</span>
             </Link>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
               {user?.ai_enabled && (
                 <button
                   onClick={() => setAiOpen(true)}
-                  className="px-3 py-2 text-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity"
+                  className="px-3 py-2 text-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity whitespace-nowrap flex-shrink-0"
                   title="Asistente IA (beta)"
                 >
                   ✨ IA
@@ -602,22 +602,25 @@ export default function EditPage(props) {
                 href={publicUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-xl transition-colors font-medium"
+                className="px-2 sm:px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-xl transition-colors font-medium whitespace-nowrap flex-shrink-0"
+                title="Ver página"
               >
-                Ver página
+                <span className="hidden sm:inline">Ver página</span>
+                <svg className="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
               </a>
-              <Button
+              <button
                 onClick={copyPublicLink}
-                variant="glass"
-                size="small"
-                icon={
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                }
+                className="flex items-center gap-1.5 px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap flex-shrink-0"
+                title="Copiar link público"
               >
-                Copiar Link
-              </Button>
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span className="hidden sm:inline">Copiar Link</span>
+              </button>
             </div>
           </div>
         </div>

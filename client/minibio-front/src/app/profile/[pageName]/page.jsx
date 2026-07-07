@@ -19,6 +19,7 @@ export default function PublicProfilePage() {
   const [qrDataUrl, setQrDataUrl] = useState(null); // data-URL del QR (modal abierto si != null)
   const [shareMsg, setShareMsg] = useState('');
   const [aliasCopied, setAliasCopied] = useState(false);
+  const [showHoursPanel, setShowHoursPanel] = useState(false);
 
   const copyAlias = async () => {
     try {
@@ -233,46 +234,57 @@ export default function PublicProfilePage() {
             </p>
           )}
 
-          {/* Ubicación */}
-          {profile.address && (
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(profile.address)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 mr-2 inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-sm font-medium text-white hover:bg-white/30 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              {profile.address}
-              <span className="text-white/70 text-xs">· cómo llegar</span>
-            </a>
+          {/* Chips: ubicación + horarios (fila centrada que envuelve bien) */}
+          {(profile.address || hasHours(profile.hours)) && (
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 px-2">
+              {profile.address && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(profile.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 max-w-full px-4 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-sm font-medium text-white hover:bg-white/30 transition-colors"
+                >
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="truncate">{profile.address}</span>
+                  <span className="text-white/70 text-xs whitespace-nowrap">· cómo llegar</span>
+                </a>
+              )}
+
+              {hasHours(profile.hours) && (
+                <button
+                  type="button"
+                  onClick={() => setShowHoursPanel(!showHoursPanel)}
+                  className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-sm font-medium text-white hover:bg-white/30 transition-colors"
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full flex-shrink-0 ${isOpenNow(profile.hours) ? 'bg-green-400' : 'bg-red-400'}`}
+                  ></span>
+                  {isOpenNow(profile.hours) ? 'Abierto ahora' : 'Cerrado'}
+                  <span className="text-white/70 text-xs whitespace-nowrap">
+                    {showHoursPanel ? '· ocultar' : '· ver horarios'}
+                  </span>
+                </button>
+              )}
+            </div>
           )}
 
-          {/* Horarios: chip abierto/cerrado + detalle */}
-          {hasHours(profile.hours) && (
-            <details className="mt-4 inline-block text-left">
-              <summary className="list-none cursor-pointer inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-sm font-medium text-white hover:bg-white/30 transition-colors">
-                <span
-                  className={`w-2 h-2 rounded-full ${isOpenNow(profile.hours) ? 'bg-green-400' : 'bg-red-400'}`}
-                ></span>
-                {isOpenNow(profile.hours) ? 'Abierto ahora' : 'Cerrado'}
-                <span className="text-white/70 text-xs">· ver horarios</span>
-              </summary>
-              <div className="mt-2 px-4 py-3 bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl text-sm text-white space-y-1">
-                {DAY_KEYS.map((k) => {
-                  const d = profile.hours?.[k];
-                  const open = d && !d.closed && d.open && d.close;
-                  return (
-                    <div key={k} className="flex justify-between gap-6">
-                      <span className="text-white/80">{DAY_NAMES[k]}</span>
-                      <span className="font-medium">{open ? `${d.open} – ${d.close}` : 'Cerrado'}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </details>
+          {/* Panel de horarios: bloque centrado debajo de los chips */}
+          {showHoursPanel && hasHours(profile.hours) && (
+            <div className="mt-3 mx-auto w-full max-w-xs px-4 py-3 bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl text-sm text-white space-y-1 text-left">
+              {DAY_KEYS.map((k) => {
+                const d = profile.hours?.[k];
+                const open = d && !d.closed && d.open && d.close;
+                return (
+                  <div key={k} className="flex justify-between gap-6">
+                    <span className="text-white/80">{DAY_NAMES[k]}</span>
+                    <span className="font-medium">{open ? `${d.open} – ${d.close}` : 'Cerrado'}</span>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
 
