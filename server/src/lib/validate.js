@@ -191,6 +191,60 @@ const menuItemSchema = z.object({
 const menuItemUpdateSchema = menuItemSchema.partial().omit({ page_id: true });
 
 // ========================================
+// Reservas / turnero
+// ========================================
+const phoneSchema = z
+  .string()
+  .trim()
+  .transform((v) => v.replace(/\D/g, ''))
+  .refine((v) => v.length >= 8 && v.length <= 15, 'Número de teléfono inválido');
+
+const bookingResourceSchema = z.object({
+  page_id: z.coerce.number().int().positive(),
+  name: z.string().trim().min(1, 'Nombre requerido').max(60),
+  description: z.string().trim().max(200).optional().nullable().or(z.literal('')),
+  quantity: z.coerce.number().int().min(1, 'Mínimo 1').max(100, 'Máximo 100'),
+  duration: z.coerce.number().int().min(10, 'Mínimo 10 minutos').max(480, 'Máximo 8 horas'),
+  price: z.coerce.number().min(0).max(99999999).optional().nullable(),
+  hours: hoursSchema.optional(),
+  active: z.boolean().optional(),
+});
+
+const bookingResourceUpdateSchema = bookingResourceSchema.partial().omit({ page_id: true });
+
+const bookingPublicSchema = z.object({
+  resource_id: z.coerce.number().int().positive(),
+  starts_at: z.string().datetime({ offset: true }),
+  customer_name: z.string().trim().min(2, 'Nombre requerido').max(60),
+  customer_phone: phoneSchema,
+  notes: z.string().trim().max(200).optional().nullable().or(z.literal('')),
+});
+
+const bookingManualSchema = bookingPublicSchema.extend({
+  page_id: z.coerce.number().int().positive(),
+});
+
+const bookingStatusSchema = z.object({
+  status: z.enum(['pending', 'confirmed', 'cancelled', 'no_show', 'done']),
+});
+
+const bookingSettingsSchema = z.object({
+  enabled: z.boolean().optional(),
+  auto_confirm: z.boolean().optional(),
+  max_days: z.coerce.number().int().min(1).max(180).optional(),
+  min_minutes: z.coerce.number().int().min(0).max(2880).optional(),
+  allow_cancel: z.boolean().optional(),
+  cancel_hours: z.coerce.number().int().min(0).max(168).optional(), // hasta 7 días antes
+});
+
+const bookingExceptionSchema = z.object({
+  page_id: z.coerce.number().int().positive(),
+  resource_id: z.coerce.number().int().positive().optional().nullable(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida (YYYY-MM-DD)'),
+  reason: z.string().trim().max(80).optional().nullable().or(z.literal('')),
+});
+
+// ========================================
 // Middleware helper
 // ========================================
 const validate = (schema) => (req, res, next) => {
@@ -218,4 +272,11 @@ module.exports = {
   menuItemSchema,
   menuItemUpdateSchema,
   slugSchema,
+  bookingResourceSchema,
+  bookingResourceUpdateSchema,
+  bookingPublicSchema,
+  bookingManualSchema,
+  bookingStatusSchema,
+  bookingSettingsSchema,
+  bookingExceptionSchema,
 };

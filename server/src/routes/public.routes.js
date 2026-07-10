@@ -28,6 +28,27 @@ router.post('/track/view', trackLimiter, statsController.trackView);
 // Parámetros públicos (i18n / textos)
 router.get('/paramPublic/:paramCode/:language', publicController.getPublicParams);
 
+// ========================================
+// Reservas / turnero (público)
+// ========================================
+const bookingController = require('../controllers/booking.controller');
+const { validate, bookingPublicSchema } = require('../lib/validate');
+
+// Crear reserva: límite estricto (anti-farmeo de turnos)
+const bookingLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10, // 10 reservas/hora por IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas reservas, probá más tarde' },
+});
+
+router.get('/booking/by-token/:token', bookingController.getByToken);
+router.post('/booking/cancel/:token', bookingController.cancelByToken);
+router.get('/booking/:slug', bookingController.getPublicInfo);
+router.get('/booking/:slug/availability', bookingController.getPublicAvailability);
+router.post('/booking/:slug', bookingLimiter, validate(bookingPublicSchema), bookingController.createPublicBooking);
+
 // Perfil público por username (primera página del usuario)
 // Ejemplo: GET /api/public/juan_perez
 router.get('/:username', publicController.getPublicProfile);

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, CheckCircle, Globe, Share2, QrCode, BarChart3, UtensilsCrossed, Mail } from 'lucide-react';
+import { ArrowRight, CheckCircle, Globe, Share2, QrCode, BarChart3, UtensilsCrossed, Mail, CalendarDays } from 'lucide-react';
 
 // Ejemplos que rotan en el mockup del teléfono
 const EXAMPLES = [
@@ -45,12 +45,14 @@ const EXAMPLES = [
 
 const features = [
   { icon: Globe, title: 'Tu página con tu nombre', desc: 'tunegocio.minibio.ar con todos tus links en un solo lugar' },
+  { icon: CalendarDays, title: 'Turnos y reservas online', desc: 'Tus clientes reservan solos: barberías, canchas, restaurantes y más' },
   { icon: UtensilsCrossed, title: 'Menú con fotos y precios', desc: 'Cargá tus productos o tu carta' },
   { icon: BarChart3, title: 'Estadísticas', desc: 'Visitas, clicks por link y actividad de los últimos días' },
 ];
 
 const benefits = [
   'Tu dirección propia: elegís el nombre de tu página',
+  'Turnero online: tus clientes reservan y vos administrás todo desde tu panel',
   'Menú o catálogo con fotos, precios y descripciones',
   'Foto de perfil y colores a tu gusto',
   'Código QR listo para imprimir y botón de compartir',
@@ -110,7 +112,7 @@ export default function MiniBioLanding() {
               </span>
             </h1>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-8 max-w-md">
-              Armá tu página con tus links, tu menú o catálogo, y compartila con un link o un QR. Pensado para emprendedores y negocios.
+              Armá tu página con tus links, tu menú o catálogo y turnos online, y compartila con un link o un QR. Pensado para emprendedores y negocios.
             </p>
             <div className="flex items-center gap-4">
               <a
@@ -188,7 +190,7 @@ export default function MiniBioLanding() {
 
       {/* Features */}
       <section className="border-y border-gray-200/70 bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-3 gap-10">
+        <div className="max-w-6xl mx-auto px-6 py-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {features.map((f) => (
             <div key={f.title}>
               <f.icon className="w-6 h-6 text-indigo-600 mb-3" strokeWidth={1.8} />

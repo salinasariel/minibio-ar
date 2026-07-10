@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "minibio-front",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd client/minibio-front && npm run dev"],
+      "port": 3000
+    }
+  ]
+}

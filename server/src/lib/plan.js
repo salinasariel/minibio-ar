@@ -14,6 +14,7 @@ const FEATURES = [
   { key: 'reviews', name: 'Reseñas de Google' },
   { key: 'custom_theme', name: 'Colores y estilos personalizados' },
   { key: 'ai', name: 'Asistente IA' },
+  { key: 'bookings', name: 'Reservas / turnos online' },
 ];
 
 const FEATURE_KEYS = FEATURES.map((f) => f.key);

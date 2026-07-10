@@ -96,6 +96,7 @@ const aiRoutes = require('./src/routes/ai.routes');
 const adminRoutes = require('./src/routes/admin.routes');
 const referralRoutes = require('./src/routes/referral.routes');
 const publicRoutes = require('./src/routes/public.routes');
+const bookingRoutes = require('./src/routes/booking.routes');
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/pages', pageRoutes);
@@ -106,6 +107,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 // ========================================
 // MANEJO DE RUTAS NO ENCONTRADAS

@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { getThemeView, getButtonView } from '@/lib/themes';
 import { LinkIcon } from '@/lib/linkIcons';
 import { DAY_KEYS, DAY_NAMES, hasHours, isOpenNow } from '@/lib/hours';
+import BookingModal from '@/components/BookingModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -20,6 +21,39 @@ export default function PublicProfilePage() {
   const [shareMsg, setShareMsg] = useState('');
   const [aliasCopied, setAliasCopied] = useState(false);
   const [showHoursPanel, setShowHoursPanel] = useState(false);
+  const [bookingEnabled, setBookingEnabled] = useState(false);
+  const [showBooking, setShowBooking] = useState(false);
+  const [cancelInfo, setCancelInfo] = useState(null); // { token, booking, resource } | null
+  const [cancelDone, setCancelDone] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  // Link de cancelación: (pagina).minibio.ar?cancelar=<token>
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get('cancelar');
+    if (!token) return;
+    fetch(`${API_URL}/public/booking/by-token/${encodeURIComponent(token)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) setCancelInfo({ token, ...data });
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleCancelBooking = async () => {
+    setCancelling(true);
+    try {
+      const res = await fetch(`${API_URL}/public/booking/cancel/${encodeURIComponent(cancelInfo.token)}`, {
+        method: 'POST',
+      });
+      if (res.ok) setCancelDone(true);
+      else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'No se pudo cancelar');
+      }
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   const copyAlias = async () => {
     try {
@@ -121,6 +155,7 @@ export default function PublicProfilePage() {
         setProfile(data.profile);
         setLinks(data.links || []);
         setMenus(data.menus || []);
+        setBookingEnabled(Boolean(data.booking_enabled));
 
         // Registrar visita (fire & forget)
         fetch(`${API_URL}/public/track/view`, {
@@ -301,6 +336,20 @@ export default function PublicProfilePage() {
             </svg>
             WhatsApp
           </a>
+        )}
+
+        {/* Botón destacado de Reservas */}
+        {bookingEnabled && (
+          <button
+            type="button"
+            onClick={() => setShowBooking(true)}
+            className="flex items-center justify-center gap-3 w-full p-5 mb-6 bg-white text-gray-900 rounded-2xl font-bold text-lg shadow-2xl hover:bg-gray-50 hover:scale-105 active:scale-95 transition-all duration-300 animate-slide-up"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Reservar turno
+          </button>
         )}
 
         {/* Links */}
@@ -542,6 +591,89 @@ export default function PublicProfilePage() {
                 Cerrar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de reserva */}
+      {showBooking && (
+        <BookingModal slug={profile?.slug || pageName} onClose={() => setShowBooking(false)} />
+      )}
+
+      {/* Modal de cancelación (llegó con ?cancelar=token) */}
+      {cancelInfo && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setCancelInfo(null)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {cancelDone ? (
+              <>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Reserva cancelada</h3>
+                <p className="text-sm text-gray-600 mb-4">Tu turno fue cancelado correctamente.</p>
+                <button
+                  onClick={() => setCancelInfo(null)}
+                  className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-200"
+                >
+                  Cerrar
+                </button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Tu reserva</h3>
+                <p className="text-sm text-gray-700 mb-1 font-semibold">{cancelInfo.resource?.name}</p>
+                <p className="text-sm text-gray-600 mb-4">
+                  {new Date(cancelInfo.booking.starts_at).toLocaleString('es-AR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                    timeZone: 'America/Argentina/Buenos_Aires',
+                  })}{' '}
+                  hs · {cancelInfo.booking.customer_name}
+                </p>
+                {cancelInfo.can_cancel ? (
+                  <button
+                    onClick={handleCancelBooking}
+                    disabled={cancelling}
+                    className="w-full px-4 py-3 mb-2 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 disabled:opacity-60"
+                  >
+                    {cancelling ? 'Cancelando...' : 'Cancelar mi reserva'}
+                  </button>
+                ) : ['pending', 'confirmed'].includes(cancelInfo.booking.status) ? (
+                  <>
+                    <p className="text-sm text-amber-700 bg-amber-50 rounded-xl px-4 py-2.5 mb-2">
+                      {cancelInfo.cancel_blocked_reason || 'No se puede cancelar online.'}
+                    </p>
+                    {cancelInfo.page?.whatsapp && (
+                      <a
+                        href={`https://wa.me/${cancelInfo.page.whatsapp}?text=${encodeURIComponent(
+                          `¡Hola! Necesito cancelar mi turno de ${cancelInfo.resource?.name || ''} (${cancelInfo.booking.customer_name})`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full px-4 py-3 mb-2 bg-[#25D366] text-white rounded-xl text-sm font-bold hover:bg-[#1fbd5a]"
+                      >
+                        Avisar por WhatsApp
+                      </a>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-500 mb-2">Esta reserva ya no está activa.</p>
+                )}
+                <button
+                  onClick={() => setCancelInfo(null)}
+                  className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-200"
+                >
+                  Volver
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

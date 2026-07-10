@@ -49,13 +49,78 @@ model Page {
   reviews_url   String? // link a reseñas de Google
   hours      Json? // horarios: { mon: {open,close,closed}, ... }
   theme      Json?
+  booking_settings Json? // reservas: { enabled, auto_confirm, max_days, min_minutes }
   created_at DateTime @default(now())
   links      Link[]
   orders     Order[]
   menus      Menu[]
   events     StatEvent[]
+  booking_resources BookingResource[]
+  bookings          Booking[]
+  booking_exceptions BookingException[]
 
   @@map("pages")
+}
+
+// ========================================
+// RESERVAS / TURNERO
+// Un recurso reservable: "Corte de pelo" (2 barberos), "Cancha de 5" (x2),
+// "Mesa para 4" (x3). quantity = unidades simultáneas del mismo recurso.
+// ========================================
+model BookingResource {
+  id          Int      @id @default(autoincrement())
+  page_id     Int
+  page        Page     @relation(fields: [page_id], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  quantity    Int      @default(1) // unidades simultáneas (sillas, canchas, mesas)
+  duration    Int      @default(60) // minutos por turno
+  price       Decimal? @db.Decimal(10, 2)
+  hours       Json? // horario semanal propio; null = usa el de la página
+  active      Boolean  @default(true)
+  position    Int      @default(0)
+  created_at  DateTime @default(now())
+  bookings    Booking[]
+  exceptions  BookingException[]
+
+  @@map("booking_resources")
+}
+
+model Booking {
+  id             Int      @id @default(autoincrement())
+  resource_id    Int
+  resource       BookingResource @relation(fields: [resource_id], references: [id], onDelete: Cascade)
+  page_id        Int
+  page           Page     @relation(fields: [page_id], references: [id], onDelete: Cascade)
+  starts_at      DateTime
+  ends_at        DateTime
+  customer_name  String
+  customer_phone String // solo dígitos, canal de contacto con el cliente
+  notes          String?
+  status         String   @default("pending") // pending|confirmed|cancelled|no_show|done
+  cancel_token   String   @unique // link de cancelación del cliente
+  created_ip     String? // anti-abuso
+  created_by_owner Boolean @default(false) // carga manual desde la centralita
+  created_at     DateTime @default(now())
+
+  @@index([resource_id, starts_at])
+  @@index([page_id, starts_at])
+  @@map("bookings")
+}
+
+// Bloqueos de fecha: feriados (resource_id null = toda la página) o
+// mantenimiento de un recurso puntual.
+model BookingException {
+  id          Int      @id @default(autoincrement())
+  page_id     Int
+  page        Page     @relation(fields: [page_id], references: [id], onDelete: Cascade)
+  resource_id Int?
+  resource    BookingResource? @relation(fields: [resource_id], references: [id], onDelete: Cascade)
+  date        DateTime @db.Date
+  reason      String?
+  created_at  DateTime @default(now())
+
+  @@map("booking_exceptions")
 }
 
 model Link {

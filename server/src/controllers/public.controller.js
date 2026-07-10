@@ -26,7 +26,27 @@ exports.getPageBySlug = async (req, res) => {
       return res.status(404).json({ error: 'Página no encontrada' });
     }
 
+    // Reservas: habilitadas si el plan del dueño lo permite, la config está
+    // activa y hay al menos un recurso reservable
+    let bookingEnabled = false;
+    try {
+      const { getSettings } = require('../lib/booking');
+      const { getUserPlan, planHasFeature } = require('../lib/plan');
+      if (getSettings(page).enabled) {
+        const plan = await getUserPlan(page.user_id);
+        if (planHasFeature(plan, 'bookings')) {
+          const resourceCount = await prisma.bookingResource.count({
+            where: { page_id: page.id, active: true },
+          });
+          bookingEnabled = resourceCount > 0;
+        }
+      }
+    } catch (e) {
+      console.error('booking flag error:', e.message);
+    }
+
     res.status(200).json({
+      booking_enabled: bookingEnabled,
       profile: {
         username: page.user.username,
         display_name: page.user.display_name || page.user.username,
