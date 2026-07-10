@@ -30,6 +30,7 @@ router.post('/exceptions', validate(bookingExceptionSchema), bookingController.c
 router.delete('/exceptions/:id', bookingController.deleteException);
 
 // Agenda
+router.get('/all', bookingController.listAllBookings);
 router.get('/page/:pageId', bookingController.listBookings);
 router.post('/manual', validate(bookingManualSchema), bookingController.createManualBooking);
 router.patch('/:id', validate(bookingStatusSchema), bookingController.updateBookingStatus);

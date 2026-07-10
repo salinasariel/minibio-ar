@@ -309,7 +309,7 @@ export default function BookingsAdminPage() {
   if (!hasBookingsFeature) {
     return (
       <div className="min-h-screen bg-[#fafaf8] flex items-center justify-center p-4">
-        <Card variant="glass" padding="large" className="max-w-md text-center">
+        <Card variant="glass" padding="large" className="max-w-md text-center p-8">
           <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -390,7 +390,7 @@ export default function BookingsAdminPage() {
 
         {/* Aviso: sin recursos todavía */}
         {resources.length === 0 && tab !== 'recursos' && (
-          <Card variant="glass" padding="large" className="mb-6 text-center">
+          <Card variant="glass" padding="large" className="mb-6 text-center p-8">
             <p className="text-gray-700 font-medium mb-3">
               Todavía no configuraste qué se puede reservar.
             </p>
@@ -431,7 +431,7 @@ export default function BookingsAdminPage() {
 
             {/* Alta manual */}
             {showManual && (
-              <Card variant="glass" padding="large" className="mb-6 animate-scale-in">
+              <Card variant="glass" padding="large" className="mb-6 animate-scale-in p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Nuevo turno manual</h3>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
@@ -439,7 +439,7 @@ export default function BookingsAdminPage() {
                     <select
                       value={manual.resource_id}
                       onChange={(e) => setManual({ ...manual, resource_id: e.target.value, time: '' })}
-                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm focus:border-indigo-500 focus:outline-none"
+                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                     >
                       <option value="">Elegir...</option>
                       {resources.map((r) => (
@@ -453,7 +453,7 @@ export default function BookingsAdminPage() {
                       type="date"
                       value={manual.date}
                       onChange={(e) => setManual({ ...manual, date: e.target.value, time: '' })}
-                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm focus:border-indigo-500 focus:outline-none"
+                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                     />
                   </div>
                   <div className="sm:col-span-2">
@@ -524,7 +524,7 @@ export default function BookingsAdminPage() {
                 ))}
               </div>
             ) : bookings.length === 0 ? (
-              <Card variant="glass" padding="large" className="text-center py-12">
+              <Card variant="glass" padding="large" className="text-center p-8 py-12">
                 <p className="text-gray-500 font-medium">No hay turnos para este día</p>
               </Card>
             ) : (
@@ -618,7 +618,7 @@ export default function BookingsAdminPage() {
             </div>
 
             {editingResource !== null && (
-              <Card variant="glass" padding="large" className="mb-6 animate-scale-in">
+              <Card variant="glass" padding="large" className="mb-6 animate-scale-in p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">
                   {editingResource === 'new' ? 'Nuevo recurso' : 'Editar recurso'}
                 </h3>
@@ -645,7 +645,7 @@ export default function BookingsAdminPage() {
                       max="100"
                       value={resourceForm.quantity}
                       onChange={(e) => setResourceForm({ ...resourceForm, quantity: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm focus:border-indigo-500 focus:outline-none"
+                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Cuántos turnos entran a la misma hora (sillas, canchas, mesas...)
@@ -662,7 +662,7 @@ export default function BookingsAdminPage() {
                       step="5"
                       value={resourceForm.duration}
                       onChange={(e) => setResourceForm({ ...resourceForm, duration: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm focus:border-indigo-500 focus:outline-none"
+                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                     />
                   </div>
                   <Input
@@ -727,14 +727,14 @@ export default function BookingsAdminPage() {
                                   type="time"
                                   value={d.open || '09:00'}
                                   onChange={(e) => setDay(k, { open: e.target.value })}
-                                  className="px-2 py-1 border border-gray-200 rounded-lg text-xs"
+                                  className="px-2 py-1 bg-white border border-gray-200 rounded-lg text-xs text-gray-900"
                                 />
                                 <span className="text-gray-400">a</span>
                                 <input
                                   type="time"
                                   value={d.close || '18:00'}
                                   onChange={(e) => setDay(k, { close: e.target.value })}
-                                  className="px-2 py-1 border border-gray-200 rounded-lg text-xs"
+                                  className="px-2 py-1 bg-white border border-gray-200 rounded-lg text-xs text-gray-900"
                                 />
                               </>
                             )}
@@ -757,7 +757,7 @@ export default function BookingsAdminPage() {
             )}
 
             {resources.length === 0 && editingResource === null ? (
-              <Card variant="glass" padding="large" className="text-center py-10">
+              <Card variant="glass" padding="large" className="text-center p-8 py-10">
                 <p className="text-gray-600 mb-2 font-medium">Creá tu primer recurso reservable</p>
                 <p className="text-sm text-gray-500 mb-4">
                   Barbería: "Corte" ×2 sillas · Cancha: "Cancha de 5" ×2 · Restaurant: "Mesa para 4" ×3
@@ -808,75 +808,47 @@ export default function BookingsAdminPage() {
 
         {/* ============ CONFIGURACIÓN ============ */}
         {tab === 'config' && settings && (
-          <div className="space-y-6">
-            <Card variant="glass" padding="large">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Reservas online</h3>
-              <div className="space-y-4">
-                <label className="flex items-center justify-between cursor-pointer">
+          <div className="space-y-6 pb-12">
+            {/* Cómo se reserva */}
+            <Card variant="glass" padding="large" className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Cómo se reserva</h3>
+              <p className="text-sm text-gray-500 mb-5">
+                Qué pasa cuando un cliente pide un turno desde tu página.
+              </p>
+              <div className="divide-y divide-gray-100">
+                <label className="flex items-center justify-between gap-4 py-4 cursor-pointer">
                   <div>
-                    <p className="font-medium text-gray-900 text-sm">Aceptar reservas</p>
-                    <p className="text-xs text-gray-500">Muestra el botón "Reservar" en tu página</p>
+                    <p className="font-semibold text-gray-900 text-sm">Aceptar reservas online</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Muestra el botón "Reservar turno" en tu página pública
+                    </p>
                   </div>
                   <input
                     type="checkbox"
                     checked={settings.enabled}
                     onChange={(e) => saveSettings({ enabled: e.target.checked })}
-                    className="w-5 h-5 rounded"
+                    className="w-5 h-5 rounded accent-indigo-600 flex-shrink-0"
                   />
                 </label>
-                <label className="flex items-center justify-between cursor-pointer">
+                <label className="flex items-center justify-between gap-4 py-4 cursor-pointer">
                   <div>
-                    <p className="font-medium text-gray-900 text-sm">Confirmación automática</p>
-                    <p className="text-xs text-gray-500">
-                      Si está apagada, cada turno queda "pendiente" hasta que lo apruebes
+                    <p className="font-semibold text-gray-900 text-sm">Confirmar turnos automáticamente</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Encendido: el turno queda confirmado al instante. Apagado: queda
+                      "pendiente" y lo aprobás vos desde la agenda.
                     </p>
                   </div>
                   <input
                     type="checkbox"
                     checked={settings.auto_confirm}
                     onChange={(e) => saveSettings({ auto_confirm: e.target.checked })}
-                    className="w-5 h-5 rounded"
+                    className="w-5 h-5 rounded accent-indigo-600 flex-shrink-0"
                   />
                 </label>
-                <label className="flex items-center justify-between cursor-pointer">
+                <div className="grid sm:grid-cols-2 gap-4 py-4">
                   <div>
-                    <p className="font-medium text-gray-900 text-sm">Cancelación online del cliente</p>
-                    <p className="text-xs text-gray-500">
-                      El cliente recibe un link para cancelar su turno solo
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={settings.allow_cancel !== false}
-                    onChange={(e) => saveSettings({ allow_cancel: e.target.checked })}
-                    className="w-5 h-5 rounded"
-                  />
-                </label>
-                {settings.allow_cancel !== false && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Puede cancelar hasta (horas antes del turno)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="168"
-                      defaultValue={settings.cancel_hours ?? 0}
-                      onBlur={(e) => {
-                        const v = parseInt(e.target.value, 10);
-                        if (!Number.isNaN(v) && v !== settings.cancel_hours) saveSettings({ cancel_hours: v });
-                      }}
-                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm focus:border-indigo-500 focus:outline-none"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      0 = puede cancelar hasta el inicio del turno. Ej: 24 = solo hasta un día antes.
-                    </p>
-                  </div>
-                )}
-                <div className="grid sm:grid-cols-2 gap-4 pt-2">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Anticipación máxima (días)
+                    <label className="block text-sm font-semibold text-gray-900 mb-1">
+                      Reservan hasta con... (días)
                     </label>
                     <input
                       type="number"
@@ -887,12 +859,15 @@ export default function BookingsAdminPage() {
                         const v = parseInt(e.target.value, 10);
                         if (v && v !== settings.max_days) saveSettings({ max_days: v });
                       }}
-                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm focus:border-indigo-500 focus:outline-none"
+                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                     />
+                    <p className="text-xs text-gray-500 mt-1.5">
+                      Ej: 30 = pueden reservar hasta con un mes de anticipación
+                    </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Anticipación mínima (minutos)
+                    <label className="block text-sm font-semibold text-gray-900 mb-1">
+                      Aviso mínimo (minutos)
                     </label>
                     <input
                       type="number"
@@ -904,14 +879,62 @@ export default function BookingsAdminPage() {
                         const v = parseInt(e.target.value, 10);
                         if (!Number.isNaN(v) && v !== settings.min_minutes) saveSettings({ min_minutes: v });
                       }}
-                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm focus:border-indigo-500 focus:outline-none"
+                      className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                     />
+                    <p className="text-xs text-gray-500 mt-1.5">
+                      Ej: 60 = no pueden reservar un turno que empieza en menos de 1 hora
+                    </p>
                   </div>
                 </div>
               </div>
             </Card>
 
-            <Card variant="glass" padding="large">
+            {/* Cancelaciones */}
+            <Card variant="glass" padding="large" className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Cancelaciones</h3>
+              <p className="text-sm text-gray-500 mb-5">
+                El cliente recibe un link con su reserva. Acá decidís si puede usarlo para cancelar.
+              </p>
+              <div className="divide-y divide-gray-100">
+                <label className="flex items-center justify-between gap-4 py-4 cursor-pointer">
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">Permitir cancelar online</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Apagado: para cancelar tienen que contactarte por WhatsApp
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={settings.allow_cancel !== false}
+                    onChange={(e) => saveSettings({ allow_cancel: e.target.checked })}
+                    className="w-5 h-5 rounded accent-indigo-600 flex-shrink-0"
+                  />
+                </label>
+                {settings.allow_cancel !== false && (
+                  <div className="py-4">
+                    <label className="block text-sm font-semibold text-gray-900 mb-1">
+                      Pueden cancelar hasta... (horas antes del turno)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="168"
+                      defaultValue={settings.cancel_hours ?? 0}
+                      onBlur={(e) => {
+                        const v = parseInt(e.target.value, 10);
+                        if (!Number.isNaN(v) && v !== settings.cancel_hours) saveSettings({ cancel_hours: v });
+                      }}
+                      className="w-full sm:w-48 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
+                    />
+                    <p className="text-xs text-gray-500 mt-1.5">
+                      0 = pueden cancelar hasta el inicio · 24 = solo hasta un día antes
+                    </p>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            <Card variant="glass" padding="large" className="p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-1">Fechas bloqueadas</h3>
               <p className="text-sm text-gray-500 mb-4">
                 Feriados o días que no atendés: no se podrán reservar.
@@ -921,7 +944,7 @@ export default function BookingsAdminPage() {
                   type="date"
                   value={newException.date}
                   onChange={(e) => setNewException({ ...newException, date: e.target.value })}
-                  className="px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm focus:border-indigo-500 focus:outline-none"
+                  className="px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                 />
                 <input
                   type="text"
@@ -929,7 +952,7 @@ export default function BookingsAdminPage() {
                   onChange={(e) => setNewException({ ...newException, reason: e.target.value })}
                   placeholder="Motivo (opcional)"
                   maxLength={80}
-                  className="flex-1 min-w-[140px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm focus:border-indigo-500 focus:outline-none"
+                  className="flex-1 min-w-[140px] px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                 />
                 <Button variant="primary" size="small" onClick={addException}>
                   Bloquear

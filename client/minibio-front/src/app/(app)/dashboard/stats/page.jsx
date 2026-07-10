@@ -56,14 +56,19 @@ export default function StatsPage() {
     day,
     views: dailyMap[`${day}:view`] || 0,
     clicks: dailyMap[`${day}:click`] || 0,
+    bookings: dailyMap[`${day}:booking`] || 0,
   }));
-  const maxBar = Math.max(1, ...series.map((s) => Math.max(s.views, s.clicks)));
+  const maxBar = Math.max(1, ...series.map((s) => Math.max(s.views, s.clicks, s.bookings)));
 
   const totals = stats?.totals || {};
+  const hasBookings = !user?.plan || user.plan.features?.includes('bookings');
 
   const summaryCards = [
     { label: 'Visitas totales', value: totals.views ?? 0, sub: `${totals.views_last7 ?? 0} esta semana`, color: 'text-blue-600' },
     { label: 'Clicks totales', value: totals.clicks ?? 0, sub: `${totals.clicks_last7 ?? 0} esta semana`, color: 'text-purple-600' },
+    ...(hasBookings
+      ? [{ label: 'Reservas', value: totals.bookings ?? 0, sub: `${totals.bookings_upcoming ?? 0} próximas · ${totals.bookings_last7 ?? 0} esta semana`, color: 'text-amber-600' }]
+      : []),
     { label: 'CTR global', value: totals.ctr !== null && totals.ctr !== undefined ? `${totals.ctr}%` : '—', sub: 'clicks / visitas', color: 'text-emerald-600' },
     { label: 'Páginas', value: totals.pages ?? 0, sub: `${totals.links ?? 0} links · ${totals.menu_items ?? 0} productos`, color: 'text-gray-900' },
   ];
@@ -91,7 +96,7 @@ export default function StatsPage() {
         )}
 
         {/* Resumen global */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className={`grid grid-cols-2 ${summaryCards.length === 5 ? 'md:grid-cols-3 lg:grid-cols-5' : 'md:grid-cols-4'} gap-4 mb-8`}>
           {summaryCards.map((c) => (
             <Card key={c.label} variant="glass" padding="medium" className="p-4">
               <p className="text-xs text-gray-500 font-medium mb-1">{c.label}</p>
@@ -112,11 +117,20 @@ export default function StatsPage() {
               <span className="flex items-center gap-1">
                 <span className="w-3 h-3 rounded-sm bg-purple-500 inline-block"></span> Clicks
               </span>
+              {hasBookings && (
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-sm bg-amber-500 inline-block"></span> Reservas
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-end gap-1 h-40">
             {series.map((s) => (
-              <div key={s.day} className="flex-1 flex items-end justify-center gap-0.5 h-full" title={`${s.day}: ${s.views} visitas, ${s.clicks} clicks`}>
+              <div
+                key={s.day}
+                className="flex-1 flex items-end justify-center gap-0.5 h-full"
+                title={`${s.day}: ${s.views} visitas, ${s.clicks} clicks${hasBookings ? `, ${s.bookings} reservas` : ''}`}
+              >
                 <div
                   className="w-1/2 max-w-4 bg-blue-500 rounded-t hover:bg-blue-600 transition-colors"
                   style={{ height: `${(s.views / maxBar) * 100}%`, minHeight: s.views > 0 ? '4px' : '1px' }}
@@ -125,6 +139,12 @@ export default function StatsPage() {
                   className="w-1/2 max-w-4 bg-purple-500 rounded-t hover:bg-purple-600 transition-colors"
                   style={{ height: `${(s.clicks / maxBar) * 100}%`, minHeight: s.clicks > 0 ? '4px' : '1px' }}
                 ></div>
+                {hasBookings && (
+                  <div
+                    className="w-1/2 max-w-4 bg-amber-500 rounded-t hover:bg-amber-600 transition-colors"
+                    style={{ height: `${(s.bookings / maxBar) * 100}%`, minHeight: s.bookings > 0 ? '4px' : '1px' }}
+                  ></div>
+                )}
               </div>
             ))}
           </div>
@@ -201,6 +221,28 @@ export default function StatsPage() {
                       <p className="text-[10px] text-gray-400">links · {p.menu_active}/{p.menu_count} productos activos</p>
                     </div>
                   </div>
+
+                  {/* Reservas de la página */}
+                  {hasBookings && p.bookings && (
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 px-3 py-2.5 bg-amber-50 rounded-xl text-sm">
+                      <span className="font-semibold text-amber-800">
+                        {p.bookings.total} reserva{p.bookings.total !== 1 ? 's' : ''}
+                      </span>
+                      <span className="text-amber-700">{p.bookings.upcoming} próximas</span>
+                      {p.bookings.pending > 0 && (
+                        <span className="text-amber-700 font-semibold">{p.bookings.pending} por aprobar</span>
+                      )}
+                      {p.bookings.no_show > 0 && (
+                        <span className="text-red-600">{p.bookings.no_show} no vino</span>
+                      )}
+                      <Link
+                        href={`/dashboard/${p.id}/bookings`}
+                        className="ml-auto text-amber-700 hover:text-amber-900 font-semibold whitespace-nowrap"
+                      >
+                        Turnos →
+                      </Link>
+                    </div>
+                  )}
 
                   {p.top_links.length > 0 && (
                     <details className="text-sm">

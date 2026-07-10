@@ -420,6 +420,40 @@ exports.listBookings = async (req, res) => {
 };
 
 // ========================================
+// DUEÑO: turnos de TODAS sus páginas (vista global)
+// GET /api/bookings/all?from=YYYY-MM-DD&to=YYYY-MM-DD&status=
+// ========================================
+exports.listAllBookings = async (req, res) => {
+  try {
+    const { from, to, status } = req.query;
+    const where = { page: { user_id: req.user.userId } };
+
+    if (from && isValidDateStr(from)) where.starts_at = { gte: new Date(`${from}T00:00:00-03:00`) };
+    if (to && isValidDateStr(to)) {
+      where.starts_at = { ...(where.starts_at || {}), lt: new Date(`${to}T24:00:00-03:00`) };
+    }
+    if (status && ['pending', 'confirmed', 'cancelled', 'no_show', 'done'].includes(status)) {
+      where.status = status;
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where,
+      orderBy: { starts_at: 'asc' },
+      take: 500,
+      include: {
+        resource: { select: { id: true, name: true } },
+        page: { select: { id: true, title: true, slug: true } },
+      },
+    });
+
+    res.status(200).json({ bookings });
+  } catch (error) {
+    console.error('listAllBookings error:', error);
+    res.status(500).json({ error: 'Error al listar turnos' });
+  }
+};
+
+// ========================================
 // DUEÑO: cambiar estado de un turno
 // PATCH /api/bookings/:id  { status }
 // ========================================

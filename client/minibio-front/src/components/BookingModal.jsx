@@ -389,7 +389,7 @@ export default function BookingModal({ slug, onClose }) {
                         onChange={(e) => setName(e.target.value)}
                         maxLength={60}
                         placeholder="Nombre y apellido"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:outline-none"
+                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                       />
                     </div>
                     <div>
@@ -400,7 +400,7 @@ export default function BookingModal({ slug, onClose }) {
                         onChange={(e) => setPhone(e.target.value)}
                         maxLength={20}
                         placeholder="Ej: 341 5 123456"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:outline-none"
+                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                       />
                       <p className="text-xs text-gray-400 mt-1">
                         El negocio te contacta por acá si hay cambios
@@ -414,7 +414,7 @@ export default function BookingModal({ slug, onClose }) {
                         onChange={(e) => setNotes(e.target.value)}
                         maxLength={200}
                         placeholder="Algo que el negocio deba saber"
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-blue-500 focus:outline-none"
+                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                       />
                     </div>
                     <button
