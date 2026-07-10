@@ -7,6 +7,10 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata = {
   title: 'MiniBio App',
   description: 'Tu link-in-bio personalizado',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/minibio-logo.png',
+  },
 };
 
 export default function RootLayout({ children }) {

@@ -92,7 +92,9 @@ exports.updateUser = async (req, res) => {
     if (typeof email_verified === 'boolean') data.email_verified = email_verified;
     if (typeof ai_enabled === 'boolean') data.ai_enabled = ai_enabled;
 
-    // Asignar / quitar plan (null = vuelve al default)
+    // Asignar / quitar plan (null = vuelve al default).
+    // La asignación manual SIEMPRE apaga pro_by_referral: si no, el sistema
+    // de referidos podría revertir la decisión del admin en el próximo login.
     if (plan_id !== undefined) {
       if (plan_id === null) {
         data.plan_id = null;
@@ -102,6 +104,7 @@ exports.updateUser = async (req, res) => {
         if (!plan) return res.status(400).json({ error: 'Plan inexistente' });
         data.plan_id = pid;
       }
+      data.pro_by_referral = false;
     }
 
     const user = await prisma.user.update({

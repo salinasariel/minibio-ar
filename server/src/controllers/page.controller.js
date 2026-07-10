@@ -1,6 +1,31 @@
 const prisma = require('../models/db');
 const { uniqueSlug } = require('../lib/slug');
-const { getUserPlan } = require('../lib/plan');
+const { getUserPlan, planHasFeature } = require('../lib/plan');
+
+// Gate server-side de campos según el plan (el front los oculta,
+// pero esto evita que se seteen por API directa)
+function checkFieldFeatures(plan, body) {
+  const checks = [
+    { cond: body.payment_alias || body.payment_link, feature: 'payment', label: 'datos de pago' },
+    { cond: body.reviews_url, feature: 'reviews', label: 'reseñas de Google' },
+    { cond: body.whatsapp, feature: 'whatsapp', label: 'botón de WhatsApp' },
+    { cond: body.address, feature: 'address', label: 'ubicación' },
+    { cond: body.hours && Object.keys(body.hours || {}).length > 0, feature: 'hours', label: 'horarios' },
+    {
+      // Tema custom: colores propios o tokens de estilo (los presets son libres)
+      cond: body.theme && (body.theme.from || body.theme.to || body.theme.button || body.theme.font || body.theme.direction),
+      feature: 'custom_theme',
+      label: 'estilos personalizados',
+    },
+  ];
+
+  for (const c of checks) {
+    if (c.cond && !planHasFeature(plan, c.feature)) {
+      return `Tu plan (${plan.name}) no incluye ${c.label}`;
+    }
+  }
+  return null;
+}
 
 // ========================================
 // CREAR NUEVA PÁGINA
@@ -18,6 +43,10 @@ exports.createPage = async (req, res) => {
         error: `Tu plan (${plan.name}) permite hasta ${plan.max_pages} página${plan.max_pages !== 1 ? 's' : ''}`,
       });
     }
+
+    // Campos gateados por feature
+    const featureError = checkFieldFeatures(plan, req.body);
+    if (featureError) return res.status(403).json({ error: featureError });
 
     const finalSlug = await uniqueSlug(slug || title);
 
@@ -123,6 +152,11 @@ exports.updatePage = async (req, res) => {
     if (!page) {
       return res.status(404).json({ error: 'Página no encontrada' });
     }
+
+    // Campos gateados por feature del plan (server-side, no solo front)
+    const plan = await getUserPlan(userId);
+    const featureError = checkFieldFeatures(plan, req.body);
+    if (featureError) return res.status(403).json({ error: featureError });
 
     const data = {};
     if (title !== undefined) data.title = title;

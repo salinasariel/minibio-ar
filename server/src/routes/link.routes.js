@@ -1,8 +1,18 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const linkController = require('../controllers/link.controller');
 const verifyToken = require('../middleware/auth');
 const { validate, linkCreateSchema, linkUpdateSchema, reorderSchema } = require('../lib/validate');
+
+// Tracking: límite estricto por IP (los clicks alimentan stats y referidos)
+const trackLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados registros de clicks' },
+});
 
 // ========================================
 // RUTAS PROTEGIDAS (requieren autenticación)
@@ -28,6 +38,6 @@ router.delete('/:id', verifyToken, linkController.deleteLink);
 // ========================================
 
 // Tracking de clicks
-router.post('/:id/click', linkController.trackClick);
+router.post('/:id/click', trackLimiter, linkController.trackClick);
 
 module.exports = router;

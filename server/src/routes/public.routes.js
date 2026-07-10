@@ -1,6 +1,16 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const publicController = require('../controllers/public.controller');
+
+// Tracking de visitas: límite estricto por IP
+const trackLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados registros de visitas' },
+});
 
 // ========================================
 // RUTAS PÚBLICAS (sin autenticación)
@@ -13,7 +23,7 @@ router.get('/page-by-slug/:slug', publicController.getPageBySlug);
 
 // Registrar visita de página (analítica)
 const statsController = require('../controllers/stats.controller');
-router.post('/track/view', statsController.trackView);
+router.post('/track/view', trackLimiter, statsController.trackView);
 
 // Parámetros públicos (i18n / textos)
 router.get('/paramPublic/:paramCode/:language', publicController.getPublicParams);
