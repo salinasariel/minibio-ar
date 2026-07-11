@@ -51,6 +51,7 @@ export default function AllBookingsPage() {
   const router = useRouter();
 
   const [bookings, setBookings] = useState([]);
+  const [pages, setPages] = useState([]); // todas las páginas del usuario
   const [range, setRange] = useState('week');
   const [pageFilter, setPageFilter] = useState(''); // '' = todas
   const [isLoading, setIsLoading] = useState(true);
@@ -81,6 +82,14 @@ export default function AllBookingsPage() {
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
+
+  // Páginas del usuario (para la grilla de acceso a cada turnero)
+  useEffect(() => {
+    if (!token) return;
+    apiFetch('/pages', token)
+      .then((data) => setPages(data))
+      .catch(() => {});
+  }, [token]);
 
   if (loading || !user) {
     return (
@@ -143,6 +152,49 @@ export default function AllBookingsPage() {
         {error && (
           <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-sm text-red-800 font-medium">
             {error}
+          </div>
+        )}
+
+        {/* Grilla de páginas: acceso al turnero de cada una */}
+        {pages.length > 0 && (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
+            {pages.map((p) => {
+              const pageBookings = bookings.filter(
+                (b) => b.page.id === p.id && ['pending', 'confirmed'].includes(b.status)
+              );
+              const pending = pageBookings.filter((b) => b.status === 'pending').length;
+              return (
+                <Link key={p.id} href={`/dashboard/${p.id}/bookings`} className="group">
+                  <Card
+                    variant="glass"
+                    padding="none"
+                    className="h-full border border-gray-200/70 group-hover:border-indigo-300 group-hover:shadow-md transition-all"
+                  >
+                    <div className="p-4">
+                      <p className="font-bold text-gray-900 text-sm truncate mb-2">{p.title}</p>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl font-bold text-indigo-600">{pageBookings.length}</span>
+                        <span className="text-xs text-gray-500">
+                          turno{pageBookings.length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <div className="mt-1.5 flex items-center justify-between gap-2 min-h-[20px]">
+                        {pending > 0 ? (
+                          <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-semibold">
+                            {pending} por aprobar
+                          </span>
+                        ) : (
+                          <span></span>
+                        )}
+                        <span className="text-xs text-gray-400 group-hover:text-indigo-600 transition-colors whitespace-nowrap">
+                          Ver agenda →
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         )}
 

@@ -316,60 +316,71 @@ export default function DashboardPage() {
             </div>
           </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid sm:grid-cols-2 gap-4">
             {pages.map((page, index) => (
               <Card
                 key={page.id}
                 variant="glass"
                 padding="none"
                 hover
-                className="overflow-hidden animate-slide-up"
+                className="overflow-hidden animate-slide-up flex flex-col"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 mb-1">
-                        {page.title}
-                      </h3>
-                      <p className="text-sm text-gray-500 mb-1">
-                        {page.bio || 'Sin descripción'}
-                      </p>
-                      {page.slug && (
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(`https://${page.slug}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar'}`);
-                            setSuccess('¡Link copiado!');
-                            setTimeout(() => setSuccess(''), 2000);
-                          }}
-                          className="text-xs text-blue-600 hover:text-blue-700 hover:underline mb-3 block"
-                          title="Copiar link público"
-                        >
-                          {page.slug}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar'} ⧉
-                        </button>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                          </svg>
-                          {page.links?.length || 0} links
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          {page.links?.reduce((sum, link) => sum + (link.clicks || 0), 0) || 0} visitas
-                        </span>
-                      </div>
-                    </div>
-                    <Link href={`/dashboard/${page.id}/edit`}>
-                      <Button variant="primary" size="medium">
-                        Editar
-                      </Button>
-                    </Link>
+                <div className="p-5 flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 mb-0.5 truncate">
+                    {page.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-2 line-clamp-2 min-h-[20px]">
+                    {page.bio || 'Sin descripción'}
+                  </p>
+                  {page.slug && (
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`https://${page.slug}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar'}`);
+                        setSuccess('¡Link copiado!');
+                        setTimeout(() => setSuccess(''), 2000);
+                      }}
+                      className="max-w-full truncate text-xs text-blue-600 hover:text-blue-700 hover:underline mb-3 block"
+                      title="Copiar link público"
+                    >
+                      {page.slug}.{process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'minibio.ar'} ⧉
+                    </button>
+                  )}
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                      {page.links?.length || 0} links
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      {page.links?.reduce((sum, link) => sum + (link.clicks || 0), 0) || 0} visitas
+                    </span>
                   </div>
+                </div>
+                {/* Acciones */}
+                <div className="border-t border-gray-100 p-3 flex gap-2">
+                  <Link href={`/dashboard/${page.id}/edit`} className="flex-1">
+                    <Button variant="primary" size="small" fullWidth>
+                      Editar
+                    </Button>
+                  </Link>
+                  {(!user.plan || user.plan.features?.includes('bookings')) && (
+                    <Link
+                      href={`/dashboard/${page.id}/bookings`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors"
+                      title="Turnos de esta página"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Turnos
+                    </Link>
+                  )}
                 </div>
               </Card>
             ))}

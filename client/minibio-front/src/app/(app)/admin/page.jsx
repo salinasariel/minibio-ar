@@ -354,32 +354,32 @@ export default function AdminPage() {
         ) : users.length === 0 ? (
           <Card className="p-8 text-center text-gray-500">Sin resultados</Card>
         ) : (
-          <div className="space-y-3">
-            <p className="text-sm text-gray-500">{users.length} usuario{users.length !== 1 ? 's' : ''}</p>
+          <>
+            <p className="text-sm text-gray-500 mb-3">{users.length} usuario{users.length !== 1 ? 's' : ''}</p>
+            <div className="grid md:grid-cols-2 gap-4 items-start">
             {users.map((u) => (
               <Card key={u.id} className="border border-gray-200">
                 <div className="p-4">
-                  <div className="flex items-start justify-between gap-3 flex-wrap">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-gray-900">{u.username}</span>
-                        {u.is_admin && (
-                          <span className="px-2 py-0.5 bg-gray-900 text-white rounded-full text-[10px] font-semibold">admin</span>
-                        )}
-                        {u.ai_enabled && (
-                          <span className="px-2 py-0.5 bg-violet-50 text-violet-700 rounded-full text-[10px] font-semibold">IA</span>
-                        )}
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${u.email_verified ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
-                          {u.email_verified ? 'verificado' : 'sin verificar'}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-500 truncate">{u.email}</p>
-                      <p className="text-xs text-gray-400">
-                        {u._count.pages} página{u._count.pages !== 1 ? 's' : ''} · alta {new Date(u.created_at).toLocaleDateString('es-AR')}
-                      </p>
+                  <div className="min-w-0 mb-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-gray-900">{u.username}</span>
+                      {u.is_admin && (
+                        <span className="px-2 py-0.5 bg-gray-900 text-white rounded-full text-[10px] font-semibold">admin</span>
+                      )}
+                      {u.ai_enabled && (
+                        <span className="px-2 py-0.5 bg-violet-50 text-violet-700 rounded-full text-[10px] font-semibold">IA</span>
+                      )}
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${u.email_verified ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                        {u.email_verified ? 'verificado' : 'sin verificar'}
+                      </span>
                     </div>
+                    <p className="text-sm text-gray-500 truncate">{u.email}</p>
+                    <p className="text-xs text-gray-400">
+                      {u._count.pages} página{u._count.pages !== 1 ? 's' : ''} · alta {new Date(u.created_at).toLocaleDateString('es-AR')}
+                    </p>
+                  </div>
 
-                    <div className="flex items-center gap-1 flex-wrap">
+                  <div className="flex items-center gap-1 flex-wrap border-t border-gray-100 pt-3">
                       <select
                         value={u.plan?.id ?? ''}
                         onChange={(e) => changeUserPlan(u, e.target.value)}
@@ -429,7 +429,6 @@ export default function AdminPage() {
                         </button>
                       )}
                     </div>
-                  </div>
 
                   {/* Páginas del usuario */}
                   {expandedPages[u.id] && (
@@ -469,7 +468,8 @@ export default function AdminPage() {
                 </div>
               </Card>
             ))}
-          </div>
+            </div>
+          </>
         )}
       </div>
 

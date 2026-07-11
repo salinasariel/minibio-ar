@@ -767,34 +767,50 @@ export default function BookingsAdminPage() {
                 </Button>
               </Card>
             ) : (
-              <div className="grid gap-3">
+              <div className="grid sm:grid-cols-2 gap-4 items-start">
                 {resources.map((r) => (
-                  <Card key={r.id} variant="glass" padding="none">
-                    <div className="p-4 flex items-center gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-gray-900 truncate">{r.name}</p>
-                          {!r.active && (
-                            <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-[11px] font-semibold">
-                              Oculto
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-500">
-                          {r.quantity} simultáneo{r.quantity !== 1 ? 's' : ''} · {r.duration} min
-                          {r.price ? ` · $${Number(r.price).toLocaleString('es-AR')}` : ''}
-                          {r.hours ? ' · horario propio' : ''}
-                        </p>
+                  <Card key={r.id} variant="glass" padding="none" className="flex flex-col">
+                    <div className="p-4 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-gray-900 truncate">{r.name}</p>
+                        {!r.active && (
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-[11px] font-semibold flex-shrink-0">
+                            Oculto
+                          </span>
+                        )}
                       </div>
+                      {r.description && (
+                        <p className="text-xs text-gray-400 mb-1.5 line-clamp-1">{r.description}</p>
+                      )}
+                      <div className="flex flex-wrap gap-1.5 text-xs">
+                        <span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-semibold">
+                          ×{r.quantity} simultáneo{r.quantity !== 1 ? 's' : ''}
+                        </span>
+                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg font-semibold">
+                          {r.duration} min
+                        </span>
+                        {r.price != null && r.price !== '' && (
+                          <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-semibold">
+                            ${Number(r.price).toLocaleString('es-AR')}
+                          </span>
+                        )}
+                        {r.hours && (
+                          <span className="px-2 py-1 bg-amber-50 text-amber-700 rounded-lg font-semibold">
+                            horario propio
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="border-t border-gray-100 p-2.5 flex gap-2">
                       <button
                         onClick={() => openResourceForm(r)}
-                        className="px-3 py-1.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                        className="flex-1 px-3 py-1.5 text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => deleteResource(r.id)}
-                        className="px-3 py-1.5 text-sm font-semibold text-red-500 hover:bg-red-50 rounded-lg"
+                        className="px-3 py-1.5 text-sm font-semibold text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         Borrar
                       </button>
