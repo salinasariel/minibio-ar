@@ -356,118 +356,142 @@ export default function AdminPage() {
         ) : (
           <>
             <p className="text-sm text-gray-500 mb-3">{users.length} usuario{users.length !== 1 ? 's' : ''}</p>
-            <div className="grid md:grid-cols-2 gap-4 items-start">
-            {users.map((u) => (
-              <Card key={u.id} className="border border-gray-200">
-                <div className="p-4">
-                  <div className="min-w-0 mb-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-gray-900">{u.username}</span>
-                      {u.is_admin && (
-                        <span className="px-2 py-0.5 bg-gray-900 text-white rounded-full text-[10px] font-semibold">admin</span>
-                      )}
-                      {u.ai_enabled && (
-                        <span className="px-2 py-0.5 bg-violet-50 text-violet-700 rounded-full text-[10px] font-semibold">IA</span>
-                      )}
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${u.email_verified ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
-                        {u.email_verified ? 'verificado' : 'sin verificar'}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 truncate">{u.email}</p>
-                    <p className="text-xs text-gray-400">
-                      {u._count.pages} página{u._count.pages !== 1 ? 's' : ''} · alta {new Date(u.created_at).toLocaleDateString('es-AR')}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-1 flex-wrap border-t border-gray-100 pt-3">
-                      <select
-                        value={u.plan?.id ?? ''}
-                        onChange={(e) => changeUserPlan(u, e.target.value)}
-                        className="px-2 py-1.5 text-xs font-medium bg-gray-50 border border-gray-200 rounded-lg text-gray-700"
-                        title="Plan del usuario"
-                      >
-                        <option value="">(default)</option>
-                        {plans.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => togglePages(u)}
-                        className="px-2.5 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg"
-                      >
-                        {expandedPages[u.id] ? 'Ocultar páginas' : 'Ver páginas'}
-                      </button>
-                      {!u.is_admin && (
-                        <button
-                          onClick={() => handleImpersonate(u)}
-                          className="px-2.5 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50 rounded-lg"
-                          title="Entrar a la app como este usuario (modo demo)"
-                        >
-                          Entrar como
-                        </button>
-                      )}
-                      <button
-                        onClick={() => toggleFlag(u, 'email_verified')}
-                        className="px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg"
-                        title="Alternar verificación de email"
-                      >
-                        {u.email_verified ? 'Quitar verif.' : 'Verificar'}
-                      </button>
-                      <button
-                        onClick={() => toggleFlag(u, 'ai_enabled')}
-                        className="px-2.5 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-50 rounded-lg"
-                        title="Alternar asistente IA"
-                      >
-                        {u.ai_enabled ? 'Quitar IA' : 'Dar IA'}
-                      </button>
-                      {!u.is_admin && (
-                        <button
-                          onClick={() => handleDeleteUser(u)}
-                          className="px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg"
-                        >
-                          Borrar
-                        </button>
-                      )}
-                    </div>
-
-                  {/* Páginas del usuario */}
-                  {expandedPages[u.id] && (
-                    <div className="mt-3 border-t border-gray-100 pt-3">
-                      {expandedPages[u.id].length === 0 ? (
-                        <p className="text-sm text-gray-400">Sin páginas</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {expandedPages[u.id].map((p) => (
-                            <div key={p.id} className="flex items-center justify-between gap-3 text-sm">
-                              <div className="min-w-0">
-                                <span className="font-medium text-gray-800">{p.title}</span>{' '}
-                                <a
-                                  href={`https://${p.slug}.${ROOT_DOMAIN}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:underline text-xs"
-                                >
-                                  {p.slug}.{ROOT_DOMAIN}
-                                </a>
-                                <span className="text-gray-400 text-xs">
-                                  {' '}· {p._count.links} links · {p._count.menus} productos
-                                </span>
-                              </div>
+            {/* Planilla de usuarios */}
+            <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <table className="w-full text-sm min-w-[900px]">
+                <thead>
+                  <tr className="bg-gray-50 text-left text-[11px] uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3 font-semibold">Usuario</th>
+                    <th className="px-4 py-3 font-semibold">Email</th>
+                    <th className="px-4 py-3 font-semibold">Estado</th>
+                    <th className="px-4 py-3 font-semibold">Plan</th>
+                    <th className="px-4 py-3 font-semibold text-center">Páginas</th>
+                    <th className="px-4 py-3 font-semibold">Alta</th>
+                    <th className="px-4 py-3 font-semibold text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {users.map((u) => (
+                    <React.Fragment key={u.id}>
+                      <tr className="hover:bg-gray-50/70 transition-colors">
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className="font-semibold text-gray-900">{u.username}</span>
+                          {u.is_admin && (
+                            <span className="ml-1.5 px-1.5 py-0.5 bg-gray-900 text-white rounded-full text-[10px] font-semibold">admin</span>
+                          )}
+                          {u.ai_enabled && (
+                            <span className="ml-1 px-1.5 py-0.5 bg-violet-50 text-violet-700 rounded-full text-[10px] font-semibold">IA</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 max-w-[220px] truncate">{u.email}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${u.email_verified ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                            {u.email_verified ? 'verificado' : 'sin verificar'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={u.plan?.id ?? ''}
+                            onChange={(e) => changeUserPlan(u, e.target.value)}
+                            className="px-2 py-1.5 text-xs font-medium bg-gray-50 border border-gray-200 rounded-lg text-gray-700"
+                            title="Plan del usuario"
+                          >
+                            <option value="">(default)</option>
+                            {plans.map((p) => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            onClick={() => togglePages(u)}
+                            className="px-2 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-lg whitespace-nowrap"
+                            title={expandedPages[u.id] ? 'Ocultar páginas' : 'Ver páginas'}
+                          >
+                            {u._count.pages} {expandedPages[u.id] ? '▴' : '▾'}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
+                          {new Date(u.created_at).toLocaleDateString('es-AR')}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1 justify-end">
+                            {!u.is_admin && (
                               <button
-                                onClick={() => handleDeletePage(u.id, p)}
-                                className="px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg flex-shrink-0"
+                                onClick={() => handleImpersonate(u)}
+                                className="px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50 rounded-lg whitespace-nowrap"
+                                title="Entrar a la app como este usuario (modo demo)"
+                              >
+                                Entrar como
+                              </button>
+                            )}
+                            <button
+                              onClick={() => toggleFlag(u, 'email_verified')}
+                              className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg whitespace-nowrap"
+                              title="Alternar verificación de email"
+                            >
+                              {u.email_verified ? 'Quitar verif.' : 'Verificar'}
+                            </button>
+                            <button
+                              onClick={() => toggleFlag(u, 'ai_enabled')}
+                              className="px-2 py-1 text-xs font-medium text-violet-600 hover:bg-violet-50 rounded-lg whitespace-nowrap"
+                              title="Alternar asistente IA"
+                            >
+                              {u.ai_enabled ? 'Quitar IA' : 'Dar IA'}
+                            </button>
+                            {!u.is_admin && (
+                              <button
+                                onClick={() => handleDeleteUser(u)}
+                                className="px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg"
                               >
                                 Borrar
                               </button>
-                            </div>
-                          ))}
-                        </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* Fila expandible: páginas del usuario */}
+                      {expandedPages[u.id] && (
+                        <tr className="bg-gray-50/60">
+                          <td colSpan={7} className="px-6 py-3">
+                            {expandedPages[u.id].length === 0 ? (
+                              <p className="text-sm text-gray-400">Sin páginas</p>
+                            ) : (
+                              <div className="space-y-1.5">
+                                {expandedPages[u.id].map((p) => (
+                                  <div key={p.id} className="flex items-center justify-between gap-3 text-sm">
+                                    <div className="min-w-0">
+                                      <span className="font-medium text-gray-800">{p.title}</span>{' '}
+                                      <a
+                                        href={`https://${p.slug}.${ROOT_DOMAIN}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:underline text-xs"
+                                      >
+                                        {p.slug}.{ROOT_DOMAIN}
+                                      </a>
+                                      <span className="text-gray-400 text-xs">
+                                        {' '}· {p._count.links} links · {p._count.menus} productos
+                                      </span>
+                                    </div>
+                                    <button
+                                      onClick={() => handleDeletePage(u.id, p)}
+                                      className="px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg flex-shrink-0"
+                                    >
+                                      Borrar
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
                       )}
-                    </div>
-                  )}
-                </div>
-              </Card>
-            ))}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </>
         )}

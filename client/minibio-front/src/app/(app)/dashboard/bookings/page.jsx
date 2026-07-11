@@ -252,44 +252,63 @@ export default function AllBookingsPage() {
             </p>
           </Card>
         ) : (
-          <div className="space-y-8">
-            {[...byDay.entries()].map(([day, items]) => (
-              <div key={day}>
-                <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3 px-1">
-                  {day === todayStr() ? `Hoy · ${dayLabelAR(day)}` : dayLabelAR(day)}
-                </h2>
-                <div className="space-y-3">
-                  {items.map((b) => (
-                    <Link key={b.id} href={`/dashboard/${b.page.id}/bookings`} className="block group">
-                      <Card variant="glass" padding="none" className="overflow-hidden group-hover:shadow-md transition-shadow">
-                        <div className="p-4 flex items-center gap-4">
-                          <div className="text-center flex-shrink-0 w-14">
-                            <p className="text-lg font-bold text-gray-900">{timeAR(b.starts_at)}</p>
-                          </div>
-                          <div className="flex-1 min-w-[150px]">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-bold text-gray-900 truncate">{b.customer_name}</p>
-                              <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${STATUS[b.status]?.cls || ''}`}>
-                                {STATUS[b.status]?.label || b.status}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-500 truncate">{b.resource?.name}</p>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold max-w-[130px] truncate">
-                              {b.page.title}
-                            </span>
-                            <svg className="w-4 h-4 text-gray-300 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
-                        </div>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
+          /* Planilla de turnos de todas las páginas */
+          <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <table className="w-full text-sm min-w-[720px]">
+              <thead>
+                <tr className="bg-gray-50 text-left text-[11px] uppercase tracking-wide text-gray-500">
+                  <th className="px-4 py-3 font-semibold">Fecha</th>
+                  <th className="px-4 py-3 font-semibold">Hora</th>
+                  <th className="px-4 py-3 font-semibold">Cliente</th>
+                  <th className="px-4 py-3 font-semibold">Página</th>
+                  <th className="px-4 py-3 font-semibold">Recurso</th>
+                  <th className="px-4 py-3 font-semibold">Estado</th>
+                  <th className="px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {[...byDay.entries()].map(([day, items]) =>
+                  items.map((b, i) => (
+                    <tr key={b.id} className={`hover:bg-indigo-50/40 transition-colors ${['cancelled', 'no_show'].includes(b.status) ? 'opacity-60' : ''}`}>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {i === 0 ? (
+                          <span className={`font-semibold ${day === todayStr() ? 'text-indigo-600' : 'text-gray-700'}`}>
+                            {day === todayStr() ? 'Hoy' : dayLabelAR(day)}
+                          </span>
+                        ) : (
+                          <span className="text-gray-300">〃</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 font-bold text-gray-900 whitespace-nowrap">{timeAR(b.starts_at)}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-900">{b.customer_name}</td>
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/dashboard/${b.page.id}/bookings`}
+                          className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-100 whitespace-nowrap"
+                        >
+                          {b.page.title}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-gray-700">{b.resource?.name}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border whitespace-nowrap ${STATUS[b.status]?.cls || ''}`}>
+                          {STATUS[b.status]?.label || b.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Link
+                          href={`/dashboard/${b.page.id}/bookings`}
+                          className="text-xs font-semibold text-gray-400 hover:text-indigo-600 whitespace-nowrap"
+                          title="Administrar en la agenda de la página"
+                        >
+                          Administrar →
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

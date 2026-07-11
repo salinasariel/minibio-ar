@@ -38,7 +38,6 @@ export default function EditPage(props) {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [editUrl, setEditUrl] = useState('');
-  const [draggedIndex, setDraggedIndex] = useState(null);
 
   // Página
   const [pageTitle, setPageTitle] = useState('');
@@ -473,37 +472,25 @@ export default function EditPage(props) {
     }
   };
 
-  // Drag & Drop
-  const handleDragStart = (index) => setDraggedIndex(index);
+  // Reordenar con flechas (el drag & drop no funciona bien en mobile)
+  const moveLink = async (index, dir) => {
+    const target = index + dir;
+    if (target < 0 || target >= links.length) return;
 
-  const handleDragOver = (e, index) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
     const newLinks = [...links];
-    const draggedItem = newLinks[draggedIndex];
-    newLinks.splice(draggedIndex, 1);
-    newLinks.splice(index, 0, draggedItem);
+    [newLinks[index], newLinks[target]] = [newLinks[target], newLinks[index]];
     setLinks(newLinks);
-    setDraggedIndex(index);
-  };
 
-  const handleDragEnd = async () => {
-    if (draggedIndex === null) return;
-    const reorderedLinks = links.map((link, index) => ({
-      id: link.id,
-      position: index,
-    }));
     try {
       await apiFetch('/links/reorder', token, {
         method: 'PATCH',
-        body: { links: reorderedLinks },
+        body: { links: newLinks.map((l, i) => ({ id: l.id, position: i })) },
       });
       showSuccess('Guardado');
     } catch (err) {
       setError('Error al reordenar');
       fetchPage();
     }
-    setDraggedIndex(null);
   };
 
   // ========================================
@@ -1090,7 +1077,7 @@ export default function EditPage(props) {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">Links ({links.length})</h2>
           {links.length > 0 && (
-            <p className="text-sm text-gray-500">Arrastra para ordenar a gusto.</p>
+            <p className="text-sm text-gray-500">Ordenalos con las flechas ↑ ↓</p>
           )}
         </div>
 
@@ -1113,15 +1100,9 @@ export default function EditPage(props) {
                 key={link.id}
                 variant="glass"
                 padding="none"
-                className={`transition-all ${draggedIndex === index ? 'opacity-50 scale-95' : ''}`}
+                className="transition-all"
               >
-                <div
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragEnd={handleDragEnd}
-                  className="p-5 cursor-move"
-                >
+                <div className="p-5">
                   {editingId === link.id ? (
                     <div className="space-y-3 text-gray-500">
                       <Input
@@ -1145,11 +1126,31 @@ export default function EditPage(props) {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-4">
-                      <div className="flex-shrink-0 text-gray-400">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                        </svg>
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      {/* Flechas para reordenar (más confiable que arrastrar en mobile) */}
+                      <div className="flex flex-col flex-shrink-0 -my-1">
+                        <button
+                          onClick={() => moveLink(index, -1)}
+                          disabled={index === 0}
+                          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-800 disabled:opacity-25 disabled:hover:bg-transparent transition-colors"
+                          title="Subir"
+                          aria-label="Subir link"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => moveLink(index, 1)}
+                          disabled={index === links.length - 1}
+                          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-800 disabled:opacity-25 disabled:hover:bg-transparent transition-colors"
+                          title="Bajar"
+                          aria-label="Bajar link"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-semibold text-gray-900 truncate">{link.title}</h3>
