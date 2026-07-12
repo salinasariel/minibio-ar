@@ -425,7 +425,7 @@ exports.listBookings = async (req, res) => {
 // ========================================
 exports.listAllBookings = async (req, res) => {
   try {
-    const { from, to, status } = req.query;
+    const { from, to, status, page_id } = req.query;
     const where = { page: { user_id: req.user.userId } };
 
     if (from && isValidDateStr(from)) where.starts_at = { gte: new Date(`${from}T00:00:00-03:00`) };
@@ -434,6 +434,10 @@ exports.listAllBookings = async (req, res) => {
     }
     if (status && ['pending', 'confirmed', 'cancelled', 'no_show', 'done'].includes(status)) {
       where.status = status;
+    }
+    // Filtro opcional por página (la condición de dueño ya aplica igual)
+    if (page_id && !Number.isNaN(parseInt(page_id, 10))) {
+      where.page_id = parseInt(page_id, 10);
     }
 
     const bookings = await prisma.booking.findMany({

@@ -100,6 +100,24 @@ exports.getMyPages = async (req, res) => {
 };
 
 // ========================================
+// RESUMEN DE MIS PÁGINAS (API pública: solo id, título y slug)
+// GET /api/v1/pages
+// ========================================
+exports.getMyPagesSummary = async (req, res) => {
+  try {
+    const pages = await prisma.page.findMany({
+      where: { user_id: req.user.userId },
+      select: { id: true, title: true, slug: true, created_at: true },
+      orderBy: { created_at: 'desc' },
+    });
+    res.status(200).json({ pages });
+  } catch (error) {
+    console.error('getMyPagesSummary error:', error);
+    res.status(500).json({ error: 'Error al obtener las páginas' });
+  }
+};
+
+// ========================================
 // OBTENER UNA PÁGINA ESPECÍFICA (del usuario autenticado)
 // ========================================
 exports.getPageById = async (req, res) => {

@@ -460,6 +460,29 @@ export default function MiniBioLanding() {
         </a>
       </section>
 
+      {/* API pública */}
+      <section className="max-w-6xl mx-auto px-6 pb-20">
+        <div className="rounded-3xl bg-gray-900 text-white p-8 md:p-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div>
+            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-300 bg-white/10 rounded-full px-3 py-1 mb-3">
+              Para desarrolladores
+            </p>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">API pública</h2>
+            <p className="text-gray-300 max-w-xl">
+              Conectá MiniBio con tus sistemas: consultá y administrá tus turnos, y
+              traé las estadísticas de todas tus páginas con tu cuenta.
+            </p>
+          </div>
+          <Link
+            href="/api"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-200 transition-colors flex-shrink-0"
+          >
+            Ver documentación
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-gray-200/70">
         <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
@@ -474,6 +497,10 @@ export default function MiniBioLanding() {
           </p>
           <p>
             © 2026 MiniBio.ar ·{' '}
+            <Link href="/api" className="font-medium text-gray-700 hover:underline">
+              API pública
+            </Link>
+            {' '}·{' '}
             <Link href="/terms" className="font-medium text-gray-700 hover:underline">
               Términos y condiciones
             </Link>

@@ -97,6 +97,7 @@ const adminRoutes = require('./src/routes/admin.routes');
 const referralRoutes = require('./src/routes/referral.routes');
 const publicRoutes = require('./src/routes/public.routes');
 const bookingRoutes = require('./src/routes/booking.routes');
+const apiV1Routes = require('./src/routes/apiv1.routes');
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/pages', pageRoutes);
@@ -108,6 +109,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/v1', apiV1Routes); // API pública documentada en minibio.ar/api
 
 // ========================================
 // MANEJO DE RUTAS NO ENCONTRADAS
